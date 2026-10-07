@@ -1,0 +1,6 @@
+{
+  "name": "প্রথমা আলো",
+  "description": "সারাদেশের সর্বশেষ খবর ও অনুসন্ধানী প্রতিবেদনের বস্তুনিষ্ঠ অনলাইন নিউজ পোর্টাল প্রথমা আলো",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
