@@ -21,6 +21,7 @@ import SocialMediaFeed from './components/SocialMediaFeed.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
 import InvestigationLogo from './components/InvestigationLogo.tsx';
 import { NewsItem } from './types.ts';
+import { LEAD_INVESTIGATIVE_ARTICLE } from './data/leadInvestigativeArticle.ts';
 
 export default function App() {
   const { user } = useAuth();
@@ -61,8 +62,8 @@ export default function App() {
         throw new Error('Failed to load articles from database.');
       }
     } catch (err: any) {
-      console.error("Error fetching news:", err);
-      setNewsError("সংবাদ লোড করতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।");
+      console.warn("API unavailable or failed, using local fallback:", err);
+      setNewsList([LEAD_INVESTIGATIVE_ARTICLE]);
     } finally {
       setLoadingNews(false);
     }
