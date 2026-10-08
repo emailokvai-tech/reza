@@ -33,7 +33,7 @@ export interface LegalLaw {
 export const DEFAULT_POSTS: MockPost[] = [
   {
     id: 'post-1',
-    authorName: 'প্রথমা আলো',
+    authorName: 'দি ইনভেস্টিগেশন',
     authorRole: 'admin',
     timeBn: '২ ঘণ্টা আগে',
     timeEn: '2 hours ago',
@@ -43,24 +43,24 @@ export const DEFAULT_POSTS: MockPost[] = [
     likes: 42,
     likedByUser: false,
     comments: [
-      { id: 'c-1-1', commenter: 'তানজিনা আক্তার', text: 'অত্যন্ত গুরুত্বপূর্ণ তথ্য। ধন্যবাদ প্রথমা আলো-কে সচেতনতা তৈরির জন্য।' },
+      { id: 'c-1-1', commenter: 'তানজিনা আক্তার', text: 'অত্যন্ত গুরুত্বপূর্ণ তথ্য। ধন্যবাদ দি ইনভেস্টিগেশন-কে সচেতনতা তৈরির জন্য।' },
       { id: 'c-1-2', commenter: 'রাফসান হাবিব', text: 'বাল্যবিবাহ ও যৌতুকের বিরুদ্ধে পাড়ায় পাড়ায় প্রতিরোধ গড়ে তোলা উচিত।' }
     ]
   },
   {
     id: 'post-2',
-    authorName: 'প্রথমা আলো',
+    authorName: 'দি ইনভেস্টিগেশন',
     authorRole: 'admin',
     timeBn: '১ দিন আগে',
     timeEn: '1 day ago',
-    contentBn: 'আসন্ন আগামী ৫ই জুলাই সকাল ১০টায় "নারী নিরাপত্তা ও ডিজিটাল সাক্ষরতা" বিষয়ে আমাদের একটি অনলাইন সেমিনার অনুষ্ঠিত হবে। সেমিনারে সাইবার হ্যারাসমেন্ট প্রতিরোধ ও আইনি প্রতিকার নিয়ে ঢাকা মেট্রোপলিটন পুলিশের সাইবার ক্রাইম ইউনিটের কর্মকর্তারা আলোচনা করবেন। সকলের অংশগ্রহণ কাম্য।',
-    contentEn: 'Our upcoming online seminar on "Women Safety and Digital Literacy" will be held on July 5th at 10 AM. Officers from the Cyber Crime Unit of Dhaka Metropolitan Police will discuss preventing cyber harassment and legal remedies. Everyone is welcome to attend.',
+    contentBn: 'আসন্ন আগামী ৫ই জুলাই সকাল ১০টায় "নাগরিক নিরাপত্তা ও ডিজিটাল সাক্ষরতা" বিষয়ে আমাদের একটি অনলাইন সেমিনার অনুষ্ঠিত হবে। সেমিনারে সাইবার হ্যারাসমেন্ট প্রতিরোধ ও আইনি প্রতিকার নিয়ে ঢাকা মেট্রোপলিটন পুলিশের সাইবার ক্রাইম ইউনিটের কর্মকর্তারা আলোচনা করবেন। সকলের অংশগ্রহণ কাম্য।',
+    contentEn: 'Our upcoming online seminar on "Citizen Safety and Digital Literacy" will be held on July 5th at 10 AM. Officers from the Cyber Crime Unit of Dhaka Metropolitan Police will discuss preventing cyber harassment and legal remedies. Everyone is welcome to attend.',
     image: '',
     likes: 128,
     likedByUser: false,
     comments: [
       { id: 'c-2-1', commenter: 'শায়লা পারভীন', text: 'নিবন্ধন করার লিংকটি শেয়ার করলে ভালো হতো।' },
-      { id: 'c-2-2', commenter: 'প্রথমা আলো (অ্যাডমিন)', text: 'সেমিনারের আগের দিন নিবন্ধনের লিংকটি এই পেজে প্রকাশ করা হবে।' }
+      { id: 'c-2-2', commenter: 'দি ইনভেস্টিগেশন (সম্পাদকীয় সেল)', text: 'সেমিনারের আগের দিন নিবন্ধনের লিংকটি এই পেজে প্রকাশ করা হবে।' }
     ]
   }
 ];

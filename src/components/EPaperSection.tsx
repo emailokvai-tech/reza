@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Download, Eye, FileText, Newspaper, RefreshCw, CheckCircle, Sparkles } from 'lucide-react';
+import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Download, Eye, FileText, Newspaper, RefreshCw, CheckCircle } from 'lucide-react';
+import InvestigationLogo from './InvestigationLogo.tsx';
 
 export default function EPaperSection() {
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -28,10 +29,8 @@ export default function EPaperSection() {
     setTimeout(() => {
       setIsDownloading(false);
       setDownloadSuccess(true);
-      
-      // Auto close success notification
       setTimeout(() => setDownloadSuccess(false), 4000);
-    }, 2500);
+    }, 2000);
   };
 
   // Broad Sheet Articles based on Page number
@@ -39,48 +38,48 @@ export default function EPaperSection() {
     switch (page) {
       case 1:
         return {
-          title: "প্রথমা আলো - ১ম পাতা (প্রধান প্রচ্ছদ)",
-          date: "রবিবার, ২৮ জুন, ২০২৬",
-          leadHeader: "ময়মনসিংহের স্বপ্না সরকার: নারীর অধিকারের মুখোশে ধ্বংসের খেলায় মেতেছেন তিনি",
-          leadBody: "ময়মনসিংহের অপরাধ জগতের সম্রাট স্বপ্না সরকার ও মাদক কারবারি মেহেদীর সিন্ডিকেট আইন-শৃঙ্খলা বাহিনীকে মোটা অংকের মাসোহারা দিয়ে এবং বিগত সরকারের আমলের অসাধু পুলিশ কর্মকর্তাদের সাথে টাকার বিনিময়ে ‘আত্মীয়তার জাল’ তৈরি করে অবাধে অপরাধ কার্যক্রম চালিয়ে যাচ্ছে। চিহ্নিত এই অপরাধীরা হাতে-নাতে ধরা পড়ার পরেও পুলিশের কাছে ‘পবিত্র’ ও ধরাছোঁয়ার বাইরে থাকছে, এমনকি মাদক কারবারিরা মামলা থেকে কৌশলে মুক্তি পাচ্ছে...",
-          column1Title: "আইনি লড়াইয়ের প্রস্তুতি",
-          column1Text: "আইনি অধিকার ও সুরক্ষা সম্পর্কে সচেতনতা বৃদ্ধির লক্ষ্যে ময়মনসিংহের ভালুকায় প্রথমা আলোর উদ্যোগে দিনব্যাপী লিগ্যাল এইড ক্লিনিক অনুষ্ঠিত হয়েছে।" ,
-          column2Title: "জনগণের ঐক্যবদ্ধ প্রতিরোধ",
-          column2Text: "অপরাধী চক্রের ব্ল্যাকমেইল ও হয়রানির বিরুদ্ধে আরামবাগের সর্বস্তরের মানুষ ঐক্যবদ্ধ অবস্থান নিয়েছেন।"
+          title: "দি ইনভেস্টিগেশন - ১ম পাতা (প্রধান প্রচ্ছদ)",
+          date: "বুধবার, ৭ অক্টোবর, ২০২৬",
+          leadHeader: "মেঘনা পেট্রোলিয়ামের গোদনাইল ডিপো ইনচার্জ মো: মাহবুবুর রহমানের বিরুদ্ধে সমন্বিত অনুসন্ধানী প্রতিবেদন",
+          leadBody: "সিদ্ধিরগঞ্জের জাতীয় জ্বালানি ডিপোতে তেল পাচার সিন্ডিকেট, কৃত্রিম সংকট তৈরি ও নিচু স্তরের কর্মচারীদের বলির পাঁঠা বানিয়ে পার পাওয়ার অভিযোগ; বিপরীতে বগুড়া ও ঢাকায় হাবিবা টাওয়ার, সাদিয়া গার্ডেনসহ অর্জিত শতকোটি টাকার দৃশ্যমান সাম্রাজ্য। নিরপেক্ষ তদন্ত ও ফরেনসিক ভূমি অডিটের জোরালো দাবি উঠেছে...",
+          column1Title: "তেল চুরির সুনির্দিষ্ট ঘটনা",
+          column1Text: "বাদশা টেক্সটাইলের চালানে অতিরিক্ত ২,২৫০ লিটার লোড ও মেসার্স রাব্বি ট্রেডার্সের নামে চালনা ছাড়া ৩,০০০ লিটার ডিজেল প্রধান ফটক দিয়ে পাচারের ঘটনায় ক্ষুব্ধ শ্রমিক ইউনিয়ন।",
+          column2Title: "বগুড়ায় সম্পদের সাম্রাজ্য",
+          column2Text: "উপ-শহরে ৮ তলা হাবিবা টাওয়ার, জলেশ্বরীতলায় সাদিয়া গার্ডেনের ২টি ফ্ল্যাট ও বাইপাসে ২০ বিঘা জমি অর্জনের খতিয়ান রেকর্ড যাচাই করেছে দি ইনভেস্টিগেশন।"
         };
       case 2:
         return {
-          title: "প্রথমা আলো - ২য় পাতা (সম্পাদকীয় ও উপ-সম্পাদকীয়)",
-          date: "রবিবার, ২৮ জুন, ২০২৬",
-          leadHeader: "বিবেক বিক্রি ও অসাধু কর্মকর্তাদের প্রশাসনিক নিষ্ক্রিয়তা",
-          leadBody: "সচেতন সমাজ মনে করে, বিগত সরকারের আমলে অর্থের বিনিময়ে চাকরিতে ঢোকা এই দুর্নীতিগ্রস্ত ও অসাধু কর্মকর্তাদের প্রশাসন থেকে সমূলে বিদায় না করলে দেশের আইন-শৃঙ্খলা পরিস্থিতির কখনোই উন্নতি হবে না। ময়মনসিংহের সচেতন যুবসমাজ আজ ধিক্কার জানাচ্ছে সেই সব কর্মকর্তাদের, যারা সামান্য কিছু উচ্ছিষ্ট টাকার বিনিময়ে নিজেদের বিবেক ও দেশের সেবা করার পবিত্র শপথ বিক্রি করে দিয়েছে...",
-          column1Title: "আইনি সংস্কারের জোরালো ডাক",
-          column1Text: "পারিবারিক সহিংসতা প্রতিরোধ আইন ২০১০ কে আরও কঠোর করা সময়ের দাবি। প্রত্যন্ত গ্রামাঞ্চলে নারীরা অভিযোগ নিয়ে থানায় গেলেও দীর্ঘ হয়রানির শিকার হতে হয়। এর দ্রুত অবসান জরুরি।" ,
-          column2Title: "নারী কণ্ঠস্বরের সাহসী উত্থান",
-          column2Text: "প্রথমা আলো পত্রিকা শুধু অপরাধ প্রকাশে সীমাবদ্ধ নয়, এটি একটি আন্দোলনের নাম। এই আন্দোলন ছড়িয়ে যাক সর্বত্র।"
+          title: "দি ইনভেস্টিগেশন - ২য় পাতা (সম্পাদকীয় ও উপ-সম্পাদকীয়)",
+          date: "বুধবার, ৭ অক্টোবর, ২০২৬",
+          leadHeader: "রাষ্ট্রীয় জ্বালানি নিরাপত্তা ও প্রাতিষ্ঠানিক দায়মুক্তির অবসান",
+          leadBody: "জাতীয় জ্বালানি নিরাপত্তার মূল চালিকাশক্তি গোদনাইল ডিপোর তেলের চোরাচালান কোনোভাবেই দায়মুক্তি পেতে পারে না। নিচু স্তরের মিটারম্যানদের বদলি বা বরখাস্ত করে মূল সুবিধাভোগী ইনচার্জকে ছাড় দেওয়ার প্রাতিষ্ঠানিক সংস্কৃতি দেশের জ্বালানি অর্থনীতিকে পঙ্গু করে দিচ্ছে। দুদক ও এনবিআরের যৌথ ফরেনসিক তদন্ত এখন সময়ের দাবি...",
+          column1Title: "আইনি সংস্কার ও দুদক আইন",
+          column1Text: "দুদক আইন ২০০৪-এর ২৬(২) ও ২৭(১) ধারা অনুযায়ী জ্ঞাত আয়ের উৎসের সাথে অসঙ্গতিপূর্ণ সম্পদ অর্জনের বিরুদ্ধে দ্রুত সম্পদ বিবরণী নোটিশ জারি করা জরুরি।",
+          column2Title: "মুক্ত সাংবাদিকতার অঙ্গীকার",
+          column2Text: "দি ইনভেস্টিগেশন কোনো রাজনৈতিক বা প্রাতিষ্ঠানিক চাপের কাছে নতি স্বীকার করবে না। সত্যের সন্ধানে নির্ভীক অনুসন্ধান অব্যাহত থাকবে।"
         };
       case 3:
         return {
-          title: "প্রথমা আলো - ৩য় পাতা (আরামবাগ ও মহানগর বার্তা)",
-          date: "রবিবার, ২৮ জুন, ২০২৬",
-          leadHeader: "আরামবাগে ফ্রী আইনি সহায়তা ক্যাম্পেইন সফল",
-          leadBody: "প্রথমা আলো পত্রিকার বিশেষ উদ্যোগে এবং আরামবাগের তরুণ যুব সমাজের সহযোগিতায় আরামবাগ ও মতিঝিল এলাকার নির্যাতিত নারীদের জন্য ১ দিনের বিশেষ আইনি পরামর্শ ও সমাধান ক্যাম্প সফলভাবে সম্পন্ন হয়েছে। ৫০ জনেরও বেশি ভুক্তভোগী নারী এই ক্যাম্পে এসে স্বনামধন্য আইনজীবীদের থেকে সরাসরি আইনি দিকনির্দেশনা ও মামলা লড়ার প্রতিশ্রুতি লাভ করেছেন...",
-          column1Title: "যৌতুক প্রতিরোধ কমিটি গঠন",
-          column1Text: "যৌতুক নিরোধ আইন ২০১৮ প্রয়োগে জোর দিতে ইউনিয়ন পর্যায়ে তরুণ সমাজ একত্রিত হয়ে ১০ সদস্যের ‘যৌতুক ও নারী নির্যাতন বিরোধী বিশেষ নাগরিক কমিটি’ গঠন করেছে।" ,
-          column2Title: "বাল্যবিবাহ রোধে লাল কার্ড",
-          column2Text: "গত সপ্তাহে আরামবাগ এলাকায় দুটি বাল্যবিবাহ ভেঙে দিতে সক্ষম হয়েছে স্থানীয় প্রশাসন ও আমাদের অনুসন্ধানী সাংবাদিক দল। বাল্যবিবাহ ও যেকোনো নারী নির্যাতনের বিরুদ্ধে ১০৯ নম্বরে কল করুন।"
+          title: "দি ইনভেস্টিগেশন - ৩য় পাতা (জাতীয় ও মহানগর বার্তা)",
+          date: "বুধবার, ৭ অক্টোবর, ২০২৬",
+          leadHeader: "নদী দখল ও নৌ-পথে চোরাই তেলের লাইটার জাহাজ চক্রের সন্ধান",
+          leadBody: "শীতলক্ষ্যা ও বুড়িগঙ্গায় রাতে ভাসমান মজুদ রেখে অনুমোদনহীন পাম্পে তেল পাচারের তথ্য পেয়েছে আইনশৃঙ্খলা বাহিনী। একই সাথে রাজধানী ঢাকার কাজীপাড়া ও শেওড়াপাড়ায় একাধিক আধুনিক ফ্ল্যাটের মালিকানা খতিয়ে দেখছে সংশ্লিষ্ট তদন্ত সংস্থা...",
+          column1Title: "১৫টি ব্রেকিং নিউজ আপডেট",
+          column1Text: "দেশব্যাপী নিত্যপণ্যের সিন্ডিকেট ভাঙতে ভোক্তা অধিকারের অভিযান ও ব্যাংকিং খাতের ঋণখেলাপিদের তালিকা চূড়ান্ত করছে কেন্দ্রীয় ব্যাংক।",
+          column2Title: "নাগরিক হেল্পলাইন ডেস্ক",
+          column2Text: "দুর্নীতি ও আর্থিক অনিয়মের বিরুদ্ধে দুদক হটলাইন ১০৬ এবং লিগ্যাল এইড নম্বর ১৬৪৩০-এ সরাসরি অভিযোগ জানানোর আহ্বান।"
         };
       case 4:
       default:
         return {
-          title: "প্রথমা আলো - ৪র্থ পাতা (সফলতা ও অনুপ্রেরণা)",
-          date: "রবিবার, ২৮ জুন, ২০২৬",
-          leadHeader: "বঞ্চনা পেরিয়ে আরামবাগের তাসলিমার রূপকথা",
-          leadBody: "একসময় শ্বশুরবাড়ির যৌতুকের অমানবিক নির্যাতনে সর্বস্ব হারিয়ে পথে বসা তাসলিমা এখন আরামবাগ এলাকার একজন সেরা নারী কৃষি উদ্যোক্তা। ১০ টি হাঁস ও মুরগি নিয়ে শুরু করা তার ছোট খামার আজ ১ কোটিরও বেশি সম্পদের সফল ডেইরি ফার্মে রূপ নিয়েছে। তাসলিমা প্রমাণ করেছেন, সঠিক ইচ্ছাক্ষমতা থাকলে নির্যাতনকে জয় করে সমাজে সসম্মানে মাথা উঁচু করে দাঁড়ানো যায়...",
-          column1Title: "ফ্রি সেলাই প্রশিক্ষণ ক্যাম্প",
-          column1Text: "দরিদ্র ও নিপীড়িত নারীদের আত্মনির্ভরশীল করতে প্রথমা আলোর তহবিলের আওতায় আগামী মাস থেকে আরামবাগে ফ্রি সেলাই ও হস্তশিল্প প্রশিক্ষণ কেন্দ্রের নতুন ব্যাচ শুরু হচ্ছে।" ,
-          column2Title: "অনলাইন উদ্যোগের নবদিগন্ত",
-          column2Text: "আরামবাগের শতাধিক তরুণী বর্তমানে ঘরে বসেই ফ্রিল্যান্সিং ও নকশীকাঁথা অনলাইনের মাধ্যমে বিক্রি করে প্রতি মাসে ২০ থেকে ৫০ হাজার টাকা আয় করছেন, যা প্রশংসার দাবিদার।"
+          title: "দি ইনভেস্টিগেশন - ৪র্থ পাতা (বিশেষ অনুসন্ধান ও সমাপনী)",
+          date: "বুধবার, ৭ অক্টোবর, ২০২৬",
+          leadHeader: "ই-খতিয়ান ও ভূমি রেকর্ডের মাধ্যমে অবৈধ সম্পত্তির অকাট্য প্রমাণ",
+          leadBody: "ভূমি মন্ত্রণালয়ের ডিজিটাল পোর্টাল (eporcha.gov.bd) ও বগুড়া সদর সাব-রেজিস্ট্রি অফিসের বালাম বই থেকে প্রাপ্ত রেকর্ডে দেখা গেছে মো: মাহবুবুর রহমান, তাঁর স্ত্রী ও তিন কন্যার নামে অর্জিত কোটি কোটি টাকার সম্পত্তি। সরকারি বেতন কাঠামোর সাথে এই বিপুল সম্পদের কোনো বৈধ সামঞ্জস্য নেই...",
+          column1Title: "তদন্ত কমিটির সুপারিশ",
+          column1Text: "ডিপো প্রধানদের নির্দিষ্ট সময় পরপর বাধ্যতামূলক বদলি নীতি এবং মেজারিং মিটারে রিয়েল-টাইম অটোমেটেড সার্ভার ট্র্যাকিং চালুর জোর তাগিদ।",
+          column2Title: "প্রকাশক ও সম্পাদনা তথ্য",
+          column2Text: "প্রকাশক: মেহেদী হাসান। প্রধান কার্যালয়: ঢাকা, বাংলাদেশ। সত্যের সন্ধানে সার্বক্ষণিক অনুসন্ধানী টিম।"
         };
     }
   };
@@ -88,215 +87,163 @@ export default function EPaperSection() {
   const content = getPageContent(currentPage);
 
   return (
-    <div className="bg-slate-100 border border-slate-200 rounded-none p-4 shadow-none">
-      
-      {/* Upper Control Bar */}
-      <div className="bg-white border border-slate-200 rounded-none p-2.5 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-none">
+    <div className="bg-white border border-slate-200 p-4 shadow-sm" id="epaper-section">
+      {/* Header of E-Paper tool */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 mb-4">
         <div className="flex items-center gap-2">
-          <div className="bg-red-50 text-red-600 p-1.5 rounded-none border border-red-200">
-            <Newspaper className="w-5 h-5" />
+          <div className="p-1.5 bg-slate-950 text-white">
+            <Newspaper className="w-5 h-5 text-red-500" />
           </div>
           <div>
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wide flex items-center gap-1">
-              ই-পেপার রিডার (E-Paper) <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+            <h3 className="text-sm md:text-base font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+              দৈনিক ই-পেপার সংস্করণ <span className="bg-red-600 text-white text-[9.5px] px-1.5 py-0.5 font-mono font-bold">DIGITAL PRINT</span>
             </h3>
-            <p className="text-[10px] text-slate-500">
-              মুদ্রিত সংবাদপত্রের হুবহু ডিজিটাল কপি ও পাতা
-            </p>
+            <p className="text-[11px] text-slate-500">প্রিন্ট সংস্করণের হুবহু ডিজিটাল কপি ও পাতাভিত্তিক ব্রাউজার</p>
           </div>
         </div>
 
-        {/* EPaper Toolbar */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          
-          {/* Zoom controls */}
-          <div className="flex items-center border border-slate-200 rounded-none overflow-hidden bg-slate-50">
-            <button
-              onClick={handleZoomOut}
-              className="p-1.5 hover:bg-slate-200 text-slate-600 transition-all cursor-pointer"
+        {/* Reader controls */}
+        <div className="flex items-center gap-2 text-xs">
+          <div className="flex items-center border border-slate-300 bg-slate-50">
+            <button 
+              onClick={handleZoomOut} 
+              className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors"
               title="জুম আউট"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="px-2.5 text-[10px] font-mono font-bold text-slate-700 select-none">
-              {zoomLevel}%
-            </span>
-            <button
-              onClick={handleZoomIn}
-              className="p-1.5 hover:bg-slate-200 text-slate-600 transition-all cursor-pointer"
+            <span className="px-2 font-mono text-[11px] font-bold text-slate-800">{zoomLevel}%</span>
+            <button 
+              onClick={handleZoomIn} 
+              className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors"
               title="জুম ইন"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
-            <button
-              onClick={handleResetZoom}
-              className="p-1.5 hover:bg-slate-200 text-slate-600 border-l border-slate-200 transition-all text-[10px] font-bold cursor-pointer"
-              title="রিসেট জুম"
+            <button 
+              onClick={handleResetZoom} 
+              className="px-2 py-1 border-l border-slate-300 text-[10px] font-bold text-slate-600 hover:text-slate-900"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              রিসেট
             </button>
           </div>
 
-          {/* Page controls */}
-          <div className="flex items-center border border-slate-200 rounded-none bg-slate-50 overflow-hidden">
-            <button
-              onClick={handlePrevPage}
-              className="p-1.5 hover:bg-slate-200 text-slate-600 transition-all cursor-pointer"
-              title="আগের পাতা"
+          <div className="flex items-center border border-slate-300 bg-slate-50">
+            <button 
+              onClick={handlePrevPage} 
+              className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors"
+              title="পূর্ববর্তী পাতা"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="px-3 text-xs font-bold text-slate-800">
+            <span className="px-2 text-[11px] font-bold text-slate-800 font-mono">
               পাতা {currentPage} / {totalPages}
             </span>
-            <button
-              onClick={handleNextPage}
-              className="p-1.5 hover:bg-slate-200 text-slate-600 transition-all cursor-pointer"
-              title="পরের পাতা"
+            <button 
+              onClick={handleNextPage} 
+              className="p-1.5 hover:bg-slate-200 text-slate-700 transition-colors"
+              title="পরবর্তী পাতা"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Download button */}
-          <button
-            onClick={triggerDownload}
+          <button 
+            onClick={triggerDownload} 
             disabled={isDownloading}
-            className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-none border transition-all cursor-pointer ${
-              isDownloading
-                ? 'bg-amber-100 border-amber-200 text-amber-700 animate-pulse'
-                : 'bg-slate-900 border-slate-950 text-white hover:bg-slate-850'
-            }`}
+            className="flex items-center gap-1.5 bg-slate-950 hover:bg-slate-800 text-white px-3 py-1.5 font-bold transition-all cursor-pointer border border-slate-900"
           >
             {isDownloading ? (
               <>
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> পিডিএফ তৈরি হচ্ছে...
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-red-400" />
+                <span>প্রস্তুত হচ্ছে...</span>
               </>
             ) : (
               <>
-                <Download className="w-3.5 h-3.5" /> পিডিএফ ডাউনলোড
+                <Download className="w-3.5 h-3.5 text-red-400" />
+                <span>পিডিএফ ডাউনলোড</span>
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Broad Sheet Paper Container */}
-      <div className="overflow-auto bg-slate-200 border border-slate-300 rounded-none max-h-[550px] p-4 flex justify-center shadow-inner">
-        
-        {/* Newspaper Mock Sheet */}
-        <div
-          className="bg-[#fdfcf7] border border-[#d2cbbe] p-5 text-slate-900 font-serif shadow-none transition-all duration-300 relative select-none w-full max-w-3xl"
-          style={{
-            transform: `scale(${zoomLevel / 100})`,
-            transformOrigin: 'top center',
-            margin: '0 auto',
-            minWidth: '600px'
-          }}
+      {/* Main E-Paper Display Canvas */}
+      <div className="overflow-x-auto bg-stone-200 p-4 border border-slate-300 flex justify-center">
+        <div 
+          style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: 'top center' }}
+          className="bg-white border-2 border-stone-400 shadow-xl max-w-4xl w-full p-6 md:p-8 transition-transform duration-150 font-serif text-slate-950"
         >
-          {/* Header watermark */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5 pointer-events-none text-center">
-            <h1 className="text-6xl font-bold font-sans rotate-12 select-none text-red-950">প্রথমা আলো</h1>
+          {/* Top Broad Sheet Masthead */}
+          <div className="border-b-4 border-slate-950 pb-3 mb-3 text-center">
+            <div className="flex justify-between items-center text-[10px] md:text-xs text-slate-600 font-sans border-b border-slate-300 pb-1 mb-2 font-bold">
+              <span>রেজিস্ট্রেশন নং: ডিআই-২০২৬/০৭</span>
+              <span className="text-red-700 font-extrabold uppercase">জাতীয় নির্ভীক অনুসন্ধানী দৈনিক</span>
+              <span>মূল্য: ৮.০০ টাকা</span>
+            </div>
+
+            {/* Newspaper Logo Title */}
+            <InvestigationLogo variant="epaper" className="my-2" />
+
+            <div className="flex justify-between items-center text-[10.5px] md:text-xs text-slate-700 font-sans border-t-2 border-slate-950 pt-1 mt-2">
+              <span className="font-bold">{content.date}</span>
+              <span className="font-bold">প্রকাশক: <strong className="text-slate-950">মেহেদী হাসান</strong></span>
+              <span className="font-bold font-mono">সংস্করণ: ০১ • খণ্ড: ০১</span>
+            </div>
           </div>
 
-          {/* Newspaper Masthead inside broadsheet */}
-          <div className="border-b-4 border-slate-900 pb-2 mb-3">
-            <div className="flex justify-between items-end border-b border-slate-400 pb-1 mb-1 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
-              <span>রেজিস্টার্ড নং: ডিএইচ-১০৯</span>
-              <span>বর্ষ ১ | সংখ্যা ৪</span>
-              <span>মতিঝিল, আরামবাগ, মতিঝিল, ঢাকা</span>
-            </div>
-            
-            <div className="text-center my-1.5">
-              <h1 className="text-4xl font-extrabold font-sans text-slate-950 tracking-tight">প্রথমা আলো</h1>
-              <p className="text-[10px] font-sans text-slate-500 mt-0.5">
-                সারাদেশের সর্বশেষ খবরের নির্ভীক ও বস্তুনিষ্ঠ অনলাইন নিউজ পোর্টাল
+          {/* E-Paper Content Columns */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mt-4">
+            {/* Main Lead Story */}
+            <div className="md:col-span-8 border-b md:border-b-0 md:border-r border-slate-300 pr-0 md:pr-4">
+              <span className="bg-red-600 text-white font-mono text-[9px] font-black px-1.5 py-0.5 uppercase tracking-wider font-sans">
+                বিশেষ অনুসন্ধানী রিপোর্ট
+              </span>
+              <h2 className="text-xl md:text-2xl font-black text-slate-950 leading-tight mt-1 mb-2">
+                {content.leadHeader}
+              </h2>
+              <p className="text-xs md:text-[12.5px] text-slate-800 leading-relaxed text-justify first-letter:text-3xl first-letter:font-black first-letter:float-left first-letter:mr-2">
+                {content.leadBody}
               </p>
             </div>
 
-            <div className="flex justify-between items-center border-t-2 border-slate-900 pt-1.5 text-[11px] font-bold text-slate-800">
-              <span>{content.date}</span>
-              <span className="text-[9px] bg-slate-900 text-white px-2 py-0.5 rounded-none uppercase font-sans">ই-পেপার এডিশন</span>
-              <span>মূল্য: সৌজন্য কপি</span>
-            </div>
-          </div>
-
-          {/* Main Headline of Broad Sheet */}
-          <div className="border-b border-slate-300 pb-3 mb-2.5">
-            <h2 className="text-xl md:text-2xl font-black text-slate-950 leading-tight mb-2 font-sans tracking-tight hover:text-purple-900 transition-colors">
-              {content.leadHeader}
-            </h2>
-            
-            {/* Broad Sheet Two Column Split */}
-            <div className="grid grid-cols-12 gap-3 mt-2.5">
-              <div className="col-span-8 text-[11px] leading-relaxed text-slate-800 pr-2 border-r border-slate-300 text-justify">
-                <span className="font-extrabold text-2xl float-left mr-1.5 mt-0.5 text-slate-950 line-height-none">
-                  {content.leadBody.charAt(0)}
-                </span>
-                {content.leadBody.substring(1)}
+            {/* Sidebar Column Stories */}
+            <div className="md:col-span-4 space-y-4">
+              <div className="border-b border-slate-200 pb-3">
+                <h4 className="text-xs font-black text-slate-950 uppercase border-l-2 border-red-600 pl-1.5 mb-1">
+                  {content.column1Title}
+                </h4>
+                <p className="text-[11px] text-slate-700 leading-relaxed text-justify">
+                  {content.column1Text}
+                </p>
               </div>
-              
-              {/* Caricature/Photo mock in print paper */}
-              <div className="col-span-4 bg-slate-100 border border-slate-200 p-2 text-center self-start rounded-none">
-                <div className="w-full h-20 bg-slate-300 rounded-none flex items-center justify-center text-slate-500 flex-col mb-1">
-                  <FileText className="w-5 h-5 mb-0.5 text-slate-400" />
-                  <span className="text-[8px] font-bold uppercase tracking-wider">তদন্ত প্রতিবেদন চিত্র</span>
-                </div>
-                <p className="text-[9px] text-slate-600 leading-snug text-center">
-                  মতিঝিলের আরামবাগ এলাকা থেকে সংগৃহীত অনুসন্ধানী অপরাধ চক্রের বিশেষ নথিচিত্র।
+
+              <div>
+                <h4 className="text-xs font-black text-slate-950 uppercase border-l-2 border-slate-950 pl-1.5 mb-1">
+                  {content.column2Title}
+                </h4>
+                <p className="text-[11px] text-slate-700 leading-relaxed text-justify">
+                  {content.column2Text}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Sub Columns Block */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className="text-justify border-r border-slate-300 pr-2">
-              <h3 className="font-sans font-black text-xs text-slate-900 mb-0.5">
-                ■ {content.column1Title}
-              </h3>
-              <p className="text-[10px] text-slate-700 leading-relaxed">
-                {content.column1Text}
-              </p>
-            </div>
-            <div className="text-justify pl-1">
-              <h3 className="font-sans font-black text-xs text-slate-900 mb-0.5">
-                ■ {content.column2Title}
-              </h3>
-              <p className="text-[10px] text-slate-700 leading-relaxed">
-                {content.column2Text}
-              </p>
-            </div>
+          {/* Broad Sheet Footer Bar */}
+          <div className="border-t-2 border-slate-950 mt-6 pt-2 flex justify-between items-center text-[10px] text-slate-500 font-sans font-bold">
+            <span>দি ইনভেস্টিগেশন প্রেস থেকে মুদ্রিত ও প্রকাশিত</span>
+            <span>পৃষ্ঠা নং: {currentPage}</span>
           </div>
-
-          {/* EPaper Footer credits */}
-          <div className="border-t-2 border-slate-900 mt-4 pt-1.5 flex justify-between items-center text-[9px] text-slate-500 font-sans font-semibold">
-            <span>সম্পাদক: রেজাউল করিম | প্রকাশক: শহিদুল ইসলাম উৎপল</span>
-            <span>পাতা নং: {currentPage} / {totalPages}</span>
-          </div>
-
         </div>
       </div>
 
-      {/* PDF Download success notification modal */}
+      {/* Download Alert Notification */}
       {downloadSuccess && (
-        <div className="mt-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-none p-2.5 flex items-center gap-2 animate-fade-in shadow-none">
-          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-          <div className="text-[11px]">
-            <p className="font-bold text-emerald-950">পিডিএফ ডাউনলোড সফল হয়েছে!</p>
-            <p className="text-emerald-700 mt-0.5">প্রথমা আলোর {content.title} আপনার লোকাল স্টোরেজে সংরক্ষণ করা হয়েছে।</p>
-          </div>
+        <div className="mt-3 p-3 bg-emerald-50 border border-emerald-300 text-xs text-emerald-900 flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-emerald-600" />
+          <span>দি ইনভেস্টিগেশন ই-পেপার ({content.title}) সফলভাবে ডাউনলোড হয়েছে।</span>
         </div>
       )}
-
-      {/* Helpful Hint */}
-      <div className="mt-2.5 bg-slate-50 border border-slate-200 rounded-none p-2 flex items-start gap-1.5">
-        <Eye className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />
-        <p className="text-[10px] text-slate-700 leading-relaxed">
-          <strong>নির্দেশনা:</strong> বড় স্ক্রিনে স্পষ্টভাবে সংবাদপত্রের সূক্ষ্ম লেখাগুলো পড়ার জন্য জুম টুলবার ব্যবহার করুন। এছাড়া পাতা পরিবর্তনের মাধ্যমে সম্পাদকীয় কলাম ও সফলতার অনন্য প্রতিবেদনগুলো পড়া যাবে।
-        </p>
-      </div>
-
     </div>
   );
 }

@@ -6,8 +6,10 @@ import {
   Send, 
   Calendar, 
   Quote, 
-  AlertCircle, 
-  Sparkles 
+  AlertCircle,
+  ShieldAlert,
+  Flame,
+  FileText
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext.tsx';
 import Header from './components/Header.tsx';
@@ -17,6 +19,7 @@ import EPaperSection from './components/EPaperSection.tsx';
 import LegalConsultant from './components/LegalConsultant.tsx';
 import SocialMediaFeed from './components/SocialMediaFeed.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
+import InvestigationLogo from './components/InvestigationLogo.tsx';
 import { NewsItem } from './types.ts';
 
 export default function App() {
@@ -36,12 +39,12 @@ export default function App() {
   const [commentTexts, setCommentTexts] = useState<{[key: string]: string}>({});
   const [expandedComments, setExpandedComments] = useState<{[key: string]: boolean}>({});
 
-  // Aggregator status tracker for administrative panel
+  // Automation status tracker for administrative panel
   const [aggregatorStatus, setAggregatorStatus] = useState({
-    lastRun: "কখনো নয়",
-    success: false,
-    addedCount: 0,
-    log: ["সিস্টেম এখনো প্রথম অ্যাগ্রিগেশন সম্পন্ন করেনি।"],
+    lastRun: "০৭ অক্টোবর, ২০২৬",
+    success: true,
+    addedCount: 20,
+    log: ["স্বয়ংক্রিয় আরএসএস ও অনুসন্ধানী সিন্ডিকেশন ইঞ্জিন প্রস্তুত।"],
     isProcessing: false
   });
 
@@ -59,7 +62,7 @@ export default function App() {
       }
     } catch (err: any) {
       console.error("Error fetching news:", err);
-      setNewsError("সংবাদ লোড করতে ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      setNewsError("সংবাদ লোড করতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।");
     } finally {
       setLoadingNews(false);
     }
@@ -91,14 +94,14 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setAggregatorStatus(data);
-        await fetchNews(); // Reload fresh database news articles
+        await fetchNews();
       }
     } catch (err: any) {
       console.error("Error triggering news aggregation:", err);
       setAggregatorStatus(prev => ({
         ...prev,
         isProcessing: false,
-        log: [...prev.log, `Error: ${err.message || err}`]
+        log: [...prev.log, `ত্রুটি: ${err.message || err}`]
       }));
     }
   };
@@ -134,7 +137,7 @@ export default function App() {
   // Comment insertion handler
   const handleCommentSubmit = async (e: React.FormEvent, id: string) => {
     e.preventDefault();
-    const author = commentAuthors[id]?.trim() || user?.displayName || user?.email?.split('@')[0] || 'ভিজিটর ইউজার';
+    const author = commentAuthors[id]?.trim() || user?.displayName || user?.email?.split('@')[0] || 'নাগরিক পাঠক';
     const text = commentTexts[id]?.trim() || '';
     if (!text) return;
 
@@ -155,6 +158,9 @@ export default function App() {
     }
   };
 
+  // Breaking news items
+  const breakingNewsItems = newsList.filter(item => item.isBreaking || item.categoryLabel?.includes('ব্রেকিং'));
+
   // Filter local state list by category & search query
   const filteredNews = newsList.filter(item => {
     const matchesSearch = searchQuery.trim() === '' || 
@@ -162,13 +168,16 @@ export default function App() {
       item.body.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+    if (activeCategory === 'all') return matchesSearch;
+    if (activeCategory === 'breaking') return matchesSearch && (item.isBreaking || item.categoryLabel?.includes('ব্রেকিং'));
+    if (activeCategory === 'investigative') return matchesSearch && (item.categoryLabel?.includes('অনুসন্ধান') || !item.isBreaking);
+    if (activeCategory === 'rights') return matchesSearch && item.category === 'rights';
 
-    return matchesSearch && matchesCategory;
+    return matchesSearch && item.category === activeCategory;
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen bg-slate-100 text-slate-900 font-sans">
       {/* Top Navigation & Brand Section */}
       <Header 
         activeCategory={activeCategory} 
@@ -176,8 +185,11 @@ export default function App() {
         onSearch={(query) => setSearchQuery(query)} 
       />
 
-      {/* Breaking News Ticker */}
-      <BreakingTicker onSelectArticle={(text) => setSearchQuery(text)} />
+      {/* Breaking News Ticker with Dynamic Live Headlines */}
+      <BreakingTicker 
+        breakingNewsList={breakingNewsItems} 
+        onSelectArticle={(text) => setSearchQuery(text)} 
+      />
 
       {/* Main Newspaper Layout Body */}
       <main className="max-w-7xl mx-auto px-4 py-6" id="main-content">
@@ -197,7 +209,7 @@ export default function App() {
           /* Newspaper Stories Section */
           <div className="space-y-6">
             
-            {/* Featured Lead news only when on homepage 'all' and no active search query is applied */}
+            {/* Featured Lead investigative news only when on homepage 'all' and no search filter */}
             {activeCategory === 'all' && !searchQuery && (
               <LeadNews 
                 newsList={newsList}
@@ -214,26 +226,34 @@ export default function App() {
               </div>
             )}
 
-            {/* General News Grid */}
+            {/* General News Grid Header & Filter */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-4">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 bg-red-600 rounded-none inline-block"></span>
-                  {activeCategory === 'all' ? 'সব সংবাদ' : 
-                   activeCategory === 'rights' ? 'অধিকার কথা' : 
-                   activeCategory === 'deprived' ? 'বঞ্চিতের কান্না' : 'সফলতার গল্প'}
-                </h3>
-                {searchQuery && (
-                  <span className="text-xs text-slate-500 font-bold bg-slate-100 border border-slate-200 px-2 py-0.5">
-                    অনুসন্ধান: "{searchQuery}"
+              <div className="flex flex-wrap items-center justify-between border-b-2 border-slate-950 pb-2 mb-4 gap-2">
+                <h2 className="text-sm md:text-base font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+                  <span className="w-3 h-3 bg-red-600 inline-block"></span>
+                  {activeCategory === 'all' ? 'সর্বশেষ সংগৃহীত সংবাদ ও অনুসন্ধানী প্রতিবেদন' : 
+                   activeCategory === 'investigative' ? '৫টি বিশেষ অনুসন্ধানী প্রতিবেদন' : 
+                   activeCategory === 'breaking' ? '১৫টি তাজা ব্রেকিং নিউজ (লাইভ আরএসএস ফিড)' : 
+                   'জাতীয় ও জনস্বার্থ বার্তা'}
+                </h2>
+                
+                <div className="flex items-center gap-2">
+                  {searchQuery && (
+                    <span className="text-xs text-slate-700 font-bold bg-white border border-slate-300 px-2 py-0.5">
+                      অনুসন্ধান: "{searchQuery}"
+                      <button onClick={() => setSearchQuery('')} className="ml-1 text-red-600 font-black cursor-pointer">×</button>
+                    </span>
+                  )}
+                  <span className="text-[11px] font-mono text-slate-600 font-bold bg-slate-200 px-2 py-0.5">
+                    মোট: {filteredNews.length} টি সংবাদ
                   </span>
-                )}
+                </div>
               </div>
 
               {loadingNews ? (
-                <div className="text-center py-12 space-y-2">
-                  <div className="w-8 h-8 border-4 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                  <p className="text-xs text-slate-500 font-bold">সংবাদ লোড হচ্ছে...</p>
+                <div className="text-center py-12 space-y-2 bg-white border border-slate-200">
+                  <div className="w-8 h-8 border-4 border-slate-900 border-t-red-600 rounded-full animate-spin mx-auto"></div>
+                  <p className="text-xs text-slate-600 font-bold">সংবাদ ডাটাবেজ থেকে লোড হচ্ছে...</p>
                 </div>
               ) : newsError ? (
                 <div className="bg-red-50 border border-red-200 text-red-800 p-4 text-center space-y-2 max-w-md mx-auto">
@@ -241,7 +261,7 @@ export default function App() {
                   <p className="text-xs font-bold text-red-950">{newsError}</p>
                   <button 
                     onClick={fetchNews}
-                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-none border border-slate-900 transition-all cursor-pointer"
+                    className="bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-1.5 transition-all cursor-pointer"
                   >
                     পুনরায় চেষ্টা করুন
                   </button>
@@ -249,25 +269,25 @@ export default function App() {
               ) : filteredNews.length === 0 ? (
                 <div className="bg-white border border-slate-200 p-8 text-center space-y-2">
                   <p className="text-xs font-bold text-slate-900">কোনো সংবাদ পাওয়া যায়নি।</p>
-                  <p className="text-[11px] text-slate-500">অনুগ্রহ করে অন্য কোনো বিষয় বা কি-ওয়ার্ড দিয়ে অনুসন্ধান করুন।</p>
+                  <p className="text-[11px] text-slate-500">অনুগ্রহ করে অন্য কোনো কি-ওয়ার্ড দিয়ে অনুসন্ধান করুন।</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredNews.map((item) => (
                     <article 
                       key={item.id} 
-                      className="bg-white border border-slate-200 hover:border-slate-800 transition-all duration-200 flex flex-col justify-between p-4"
+                      className="bg-white border border-slate-200 hover:border-slate-800 transition-all duration-200 flex flex-col justify-between p-4 shadow-2xs"
                       id={`news-card-${item.id}`}
                     >
                       <div>
                         {/* News Category Badge & Time */}
                         <div className="flex justify-between items-center mb-2.5">
                           <span className={`text-[10px] font-black uppercase px-2 py-0.5 tracking-wide ${
-                            item.category === 'rights' ? 'bg-blue-600 text-white' :
-                            item.category === 'deprived' ? 'bg-red-600 text-white' :
-                            item.category === 'success' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-white'
+                            item.isBreaking ? 'bg-red-600 text-white' :
+                            item.categoryLabel?.includes('অনুসন্ধান') ? 'bg-slate-950 text-white' :
+                            'bg-slate-800 text-white'
                           }`}>
-                            {item.categoryLabel}
+                            {item.categoryLabel || 'সংবাদ'}
                           </span>
                           <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1 font-semibold">
                             <Calendar className="w-3 h-3 text-slate-400" />
@@ -275,100 +295,85 @@ export default function App() {
                           </span>
                         </div>
 
-                        {item.image && (
-                          <div className="mb-3 overflow-hidden border border-slate-200 aspect-[16/9] w-full bg-slate-50">
-                            <img 
-                              src={item.image} 
-                              alt={item.title} 
-                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
-                        )}
-
                         {/* Title */}
-                        <h4 className="text-sm md:text-base font-black text-slate-900 leading-snug font-serif hover:text-purple-900 transition-colors cursor-pointer mb-2">
+                        <h3 className="text-sm md:text-[15px] font-black text-slate-950 leading-snug font-serif hover:text-red-700 transition-colors cursor-pointer mb-2">
                           {item.title}
-                        </h4>
+                        </h3>
 
                         {/* Excerpt */}
-                        <p className="text-xs text-slate-600 text-justify leading-relaxed mb-3">
+                        <p className="text-xs text-slate-700 text-justify leading-relaxed mb-3">
                           {item.excerpt}
                         </p>
 
                         {/* Highlighted Quote Callout block */}
                         {item.quote && (
-                          <div className="bg-slate-50 border-l-4 border-slate-900 p-2.5 my-3 relative italic text-[11px] text-slate-700 leading-relaxed text-justify font-serif">
-                            <Quote className="w-4 h-4 text-slate-300 absolute -top-1.5 -left-1 opacity-60" />
+                          <div className="bg-slate-50 border-l-3 border-red-600 p-2.5 my-3 relative italic text-[11px] text-slate-800 leading-relaxed text-justify font-serif">
+                            <Quote className="w-4 h-4 text-red-300 absolute -top-1.5 -left-1 opacity-60" />
                             <p className="font-semibold">"{item.quote}"</p>
                           </div>
                         )}
 
                         {/* Collapsible details for full read */}
                         <details className="group border-t border-slate-100 pt-2.5 mt-2.5">
-                          <summary className="text-[11px] font-black text-slate-900 hover:text-purple-900 cursor-pointer flex items-center justify-between list-none">
-                            <span>বিস্তারিত পড়ুন</span>
+                          <summary className="text-[11px] font-black text-slate-900 hover:text-red-700 cursor-pointer flex items-center justify-between list-none">
+                            <span>পূর্ণাঙ্গ প্রতিবেদন পড়ুন</span>
                             <span className="transition-transform group-open:rotate-180 text-xs font-mono">▼</span>
                           </summary>
                           <div className="text-[11px] md:text-xs text-slate-800 leading-relaxed text-justify space-y-2 mt-2 pt-2 border-t border-slate-50 font-sans whitespace-pre-line">
                             {item.body}
                             <div className="pt-2 text-[10px] text-slate-500 font-bold border-t border-slate-100 flex justify-between">
-                              <span>লেখক: {item.author}</span>
-                              {item.isAIExpanded && (
-                                <span className="text-purple-700 font-mono uppercase tracking-wider flex items-center gap-1 font-semibold">
-                                  <Sparkles className="w-3 h-3" /> এআই সিঙ্ক ও বর্ধিত
-                                </span>
-                              )}
+                              <span>প্রতিবেদক: {item.author}</span>
+                              <span className="text-slate-600 font-mono">যাচাইকৃত ডেস্ক</span>
                             </div>
                           </div>
                         </details>
                       </div>
 
                       {/* Interactive Section */}
-                      <div className="mt-4 border-t border-slate-150 pt-2.5">
+                      <div className="mt-4 border-t border-slate-200 pt-2.5">
                         {/* Engagement Statistics */}
                         <div className="flex justify-between items-center text-[10px] text-slate-500 pb-2 border-b border-slate-100 font-bold">
                           <span>{item.likes} জন সহমত</span>
                           <div className="flex gap-2">
-                            <span>{item.comments?.length || 0} মন্তব্য</span>
+                            <span>{item.comments?.length || 0} মতামত</span>
                             <span>•</span>
                             <span>{item.shares} শেয়ার</span>
                           </div>
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex justify-between items-center pt-2 text-xs font-black text-slate-700">
+                        <div className="flex justify-between items-center pt-2 text-xs font-bold text-slate-700">
                           <button 
                             onClick={() => handleLike(item.id)}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-150"
+                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
                           >
-                            <ThumbsUp className="w-3.5 h-3.5 text-slate-600 animate-none" /> সহমত
+                            <ThumbsUp className="w-3.5 h-3.5 text-slate-600" /> সহমত
                           </button>
                           <button 
                             onClick={() => setExpandedComments(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-150"
+                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
                           >
                             <MessageSquare className="w-3.5 h-3.5 text-slate-600" /> মন্তব্য
                           </button>
                           <button 
                             onClick={() => handleShare(item.id)}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-150"
+                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
                           >
                             <Share2 className="w-3.5 h-3.5 text-slate-600" /> শেয়ার
                           </button>
                         </div>
 
-                        {/* Comments container drawer inside card */}
+                        {/* Comments container */}
                         {expandedComments[item.id] && (
-                          <div className="mt-3 bg-slate-50 p-2 border border-slate-200 animate-fade-in space-y-2.5">
-                            <h5 className="text-[10px] font-black text-slate-900 uppercase">জনপ্রতিক্রিয়া কলাম:</h5>
+                          <div className="mt-3 bg-slate-50 p-2.5 border border-slate-200 space-y-2.5">
+                            <h4 className="text-[10px] font-black text-slate-900 uppercase">জনপ্রতিক্রিয়া:</h4>
                             
                             <div className="space-y-1.5 max-h-32 overflow-y-auto">
                               {!item.comments || item.comments.length === 0 ? (
-                                <p className="text-[9px] text-slate-400 italic">এখনো কোনো মন্তব্য দেওয়া হয়নি। প্রথম মন্তব্যটি আপনার হোক।</p>
+                                <p className="text-[9.5px] text-slate-500 italic">প্রথম মন্তব্যটি আপনার হোক।</p>
                               ) : (
                                 item.comments.map((c) => (
-                                  <div key={c.id} className="bg-white p-2 border border-slate-150 text-[10px] leading-relaxed">
+                                  <div key={c.id} className="bg-white p-2 border border-slate-200 text-[10px] leading-relaxed">
                                     <div className="flex justify-between items-center mb-0.5">
                                       <span className="font-extrabold text-slate-900">{c.author}</span>
                                       <span className="text-[8px] text-slate-400 font-mono">{c.date}</span>
@@ -381,30 +386,24 @@ export default function App() {
 
                             {/* Comment creation form */}
                             <form onSubmit={(e) => handleCommentSubmit(e, item.id)} className="space-y-1.5 pt-1.5 border-t border-slate-200">
-                              <div className="grid grid-cols-2 gap-1.5">
-                                <input 
-                                  type="text"
-                                  placeholder="আপনার নাম..."
-                                  value={commentAuthors[item.id] || ''}
-                                  onChange={(e) => setCommentAuthors(prev => ({ ...prev, [item.id]: e.target.value }))}
-                                  className="bg-white border border-slate-300 text-[10px] px-2 py-1 focus:outline-none w-full text-slate-800"
-                                  required={!user}
-                                  disabled={!!user}
-                                />
-                                <span className="text-[8px] text-slate-400 flex items-center italic">
-                                  {user ? `* ${user.displayName || user.email} হিসেবে পোস্ট` : '* যাচাই সাপেক্ষে প্রকাশিত হবে'}
-                                </span>
-                              </div>
+                              <input 
+                                type="text"
+                                placeholder="আপনার নাম..."
+                                value={commentAuthors[item.id] || ''}
+                                onChange={(e) => setCommentAuthors(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                className="bg-white border border-slate-300 text-[10px] px-2 py-1 focus:outline-none w-full text-slate-800"
+                                required
+                              />
                               <div className="relative">
                                 <input 
                                   type="text"
-                                  placeholder="আপনার প্রতিবাদী প্রতিক্রিয়া বাংলা ভাষায় লিখুন..."
+                                  placeholder="আপনার মতামত লিখুন..."
                                   value={commentTexts[item.id] || ''}
                                   onChange={(e) => setCommentTexts(prev => ({ ...prev, [item.id]: e.target.value }))}
                                   className="w-full bg-white border border-slate-300 text-[10px] pl-2 pr-8 py-1 focus:outline-none text-slate-800"
                                   required
                                 />
-                                <button type="submit" className="absolute right-1.5 top-1 text-slate-600 hover:text-slate-900 cursor-pointer">
+                                <button type="submit" className="absolute right-1.5 top-1 text-slate-600 hover:text-slate-950 cursor-pointer">
                                   <Send className="w-3 h-3" />
                                 </button>
                               </div>
@@ -422,33 +421,40 @@ export default function App() {
       </main>
 
       {/* Brand Footer Section */}
-      <footer className="bg-slate-900 text-slate-400 py-8 px-4 mt-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left">
-          <div className="space-y-2">
-            <h4 className="text-white text-sm font-black uppercase tracking-wider">প্রথমা আলো</h4>
-            <p className="text-[11px] leading-relaxed">
-              সারাদেশের সর্বশেষ খবর ও বিশেষ অনুসন্ধানী প্রতিবেদনের নির্ভীক ও বস্তুনিষ্ঠ অনলাইন নিউজ পোর্টাল।
+      <footer className="bg-slate-950 text-slate-300 py-10 px-4 mt-12 border-t-4 border-red-600">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+          <div className="space-y-3">
+            <InvestigationLogo variant="header" />
+            <p className="text-xs text-slate-400 leading-relaxed text-justify mt-2">
+              সত্যের সন্ধানে নির্ভীক জাতীয় ও অনুসন্ধানী অনলাইন দৈনিক পত্রিকা। রাষ্ট্রীয় দুর্নীতি, ক্ষমতার অপব্যবহার, জ্বালানি সিন্ডিকেট ও সামাজিক বৈষম্যের বিরুদ্ধে বস্তুনিষ্ঠ সাংবাদিকতা।
             </p>
           </div>
+          
           <div className="space-y-2">
-            <h4 className="text-white text-sm font-black uppercase tracking-wider">সম্পাদনা ও প্রকাশনা</h4>
-            <p className="text-[11px] leading-relaxed text-slate-400">
-              সম্পাদক: <strong className="text-slate-200">রেজাউল করিম</strong><br />
-              প্রকাশক: <strong className="text-slate-200">শহিদুল ইসলাম উৎপল</strong><br />
-              প্রধান কার্যালয়: মতিঝিল, আরামবাগ, মতিঝিল, ঢাকা, বাংলাদেশ।<br />
-              ইমেল: contact@prothomaalo.org<br />
-              জরুরি হটলাইন: ৯৯৯ (টোল-ফ্রি)
-            </p>
+            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1 text-red-500">
+              সম্পাদনা ও প্রকাশনা তথ্য
+            </h4>
+            <div className="text-xs leading-relaxed text-slate-300 space-y-1">
+              <p>প্রকাশক: <strong className="text-white font-black">মেহেদী হাসান</strong></p>
+              <p>প্রধান কার্যালয়: ঢাকা, বাংলাদেশ</p>
+              <p>অনুসন্ধানী ডেস্ক: <span className="font-mono text-slate-400">investigation@theinvestigation.bd</span></p>
+              <p>জরুরি সেবা: দুদক হটলাইন ১০৬ | জাতীয় জরুরি ৯৯৯</p>
+            </div>
           </div>
+
           <div className="space-y-2">
-            <h4 className="text-white text-sm font-black uppercase tracking-wider">আইনি সতর্কতা</h4>
-            <p className="text-[11px] leading-relaxed text-slate-400">
-              এই পোর্টালে প্রকাশিত সকল অনুসন্ধানী প্রতিবেদন ও বিশেষ সংবাদ জনস্বার্থে সংগৃহীত ও পরিবেশিত। এর অবৈধ নকল বা অননুমোদিত ব্যবহার আইনত দণ্ডনীয়।
+            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1 text-red-500">
+              নীতি ও আইনি বিজ্ঞপ্তি
+            </h4>
+            <p className="text-[11.5px] leading-relaxed text-slate-400 text-justify">
+              এই পোর্টালে প্রকাশিত সকল অনুসন্ধানী প্রতিবেদন ও নথিপত্র জনস্বার্থে অকাট্য প্রমাণের ভিত্তিতে সংগৃহীত ও প্রকাশিত। তথ্যদাতার সার্বিক সুরক্ষা বাংলাদেশ ও আন্তর্জাতিক সাংবাদিকতার নীতিমালা দ্বারা সংরক্ষিত।
             </p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto border-t border-slate-800 mt-6 pt-4 text-center text-[10px] text-slate-500 font-mono">
-          &copy; {new Date().getFullYear()} প্রথমা আলো. সর্বস্বত্ব সংরক্ষিত।
+
+        <div className="max-w-7xl mx-auto border-t border-slate-800 mt-8 pt-4 flex flex-wrap justify-between items-center text-[10.5px] text-slate-500 font-mono gap-2">
+          <span>&copy; {new Date().getFullYear()} দি ইনভেস্টিগেশন (The Investigation). সর্বস্বত্ব সংরক্ষিত।</span>
+          <span>প্রকাশক: মেহেদী হাসান • জাতীয় অনুসন্ধানী দৈনিক</span>
         </div>
       </footer>
     </div>

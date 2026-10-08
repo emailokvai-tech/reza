@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { 
   Shield, 
   Terminal, 
   FileText, 
-  MessageSquare, 
   PlusCircle, 
   Trash2, 
   RefreshCw, 
-  Users, 
   CheckCircle, 
   AlertTriangle, 
   Lock, 
   Unlock,
   Radio,
-  FileSpreadsheet
+  Rss
 } from 'lucide-react';
 import { NewsItem } from '../types';
 
@@ -41,17 +38,17 @@ export default function AdminPanel({
   const [adminPassword, setAdminPassword] = useState('');
   const [authError, setAuthError] = useState('');
   
-  // Tab states: 'dashboard', 'articles', 'comments', 'social'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'articles' | 'comments' | 'social'>('dashboard');
+  // Tab states: 'dashboard', 'articles', 'social'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'articles' | 'social'>('dashboard');
 
   // New article form state
   const [newArticle, setNewArticle] = useState({
     title: '',
     excerpt: '',
     body: '',
-    author: 'সম্পাদকীয় সেল',
+    author: 'সম্পাদকীয় অনুসন্ধানী সেল | দি ইনভেস্টিগেশন',
     category: 'rights',
-    categoryLabel: 'অধিকার কথা',
+    categoryLabel: 'বিশেষ অনুসন্ধান',
     quote: ''
   });
   const [isSubmittingArticle, setIsSubmittingArticle] = useState(false);
@@ -59,14 +56,14 @@ export default function AdminPanel({
 
   // Social media custom post form state
   const [newSocial, setNewSocial] = useState({
-    portalName: 'প্রথমা আলো',
+    portalName: 'দি ইনভেস্টিগেশন',
     content: '',
     hashtags: ''
   });
   const [isSubmittingSocial, setIsSubmittingSocial] = useState(false);
   const [socialList, setSocialList] = useState<any[]>([]);
 
-  // Fetch social media posts for admin moderation
+  // Fetch social media posts for moderation
   const fetchSocialPosts = async () => {
     try {
       const res = await fetch('/api/social-media');
@@ -85,39 +82,44 @@ export default function AdminPanel({
     }
   }, [isAuthenticated]);
 
-  // Handle Login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPassword === 'admin' || adminPassword === 'admin123' || adminPassword === 'admin_nari') {
+    if (adminPassword === 'admin' || adminPassword === 'investigation2026') {
       setIsAuthenticated(true);
       setAuthError('');
     } else {
-      setAuthError('ভুল পাসওয়ার্ড! অনুগ্রহ করে সঠিক এডমিন পাসওয়ার্ড প্রদান করুন।');
+      setAuthError('ভুল পাসওয়ার্ড। অনুগ্রহ করে সঠিক পাসওয়ার্ড প্রদান করুন। (ডেমো: admin)');
     }
   };
 
-  // Handle article insert
+  // Create article handler
   const handleCreateArticle = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newArticle.title.trim() || !newArticle.body.trim()) return;
+    if (!newArticle.title.trim() || !newArticle.body.trim()) {
+      alert('শিরোনাম ও বিস্তারিত লেখা আবশ্যক।');
+      return;
+    }
 
     setIsSubmittingArticle(true);
     setSubmitMessage('');
 
     try {
-      // Map category label
-      let label = 'অধিকার কথা';
-      if (newArticle.category === 'deprived') label = 'বঞ্চিতের কান্না';
-      if (newArticle.category === 'success') label = 'সফলতার গল্প';
+      const now = new Date();
+      const bnDate = `${now.getDate()} অক্টোবর, ২০২৬`;
 
       const payload = {
         id: `news-custom-${Date.now()}`,
-        ...newArticle,
-        categoryLabel: label,
-        date: new Date().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }),
-        likes: 0,
-        shares: 0,
-        comments: []
+        title: newArticle.title,
+        excerpt: newArticle.excerpt || newArticle.title,
+        body: newArticle.body,
+        date: bnDate,
+        author: newArticle.author || 'সম্পাদকীয় অনুসন্ধানী সেল | দি ইনভেস্টিগেশন',
+        category: newArticle.category,
+        categoryLabel: newArticle.categoryLabel,
+        likes: 12,
+        shares: 4,
+        comments: [],
+        quote: newArticle.quote || undefined
       };
 
       const res = await fetch('/api/news', {
@@ -127,42 +129,24 @@ export default function AdminPanel({
       });
 
       if (res.ok) {
-        setSubmitMessage('নিউজ আর্টিকেলটি সফলভাবে ডাটাবেজে প্রকাশিত হয়েছে!');
+        setSubmitMessage('সংবাদটি সফলভাবে ডাটাবেজে প্রকাশিত হয়েছে!');
         setNewArticle({
           title: '',
           excerpt: '',
           body: '',
-          author: 'সম্পাদকীয় সেল',
+          author: 'সম্পাদকীয় অনুসন্ধানী সেল | দি ইনভেস্টিগেশন',
           category: 'rights',
-          categoryLabel: 'অধিকার কথা',
+          categoryLabel: 'বিশেষ অনুসন্ধান',
           quote: ''
         });
         await onRefreshNews();
       } else {
-        setSubmitMessage('প্রকাশ করতে ব্যর্থ হয়েছে। দয়া করে পুনরায় চেষ্টা করুন।');
+        throw new Error('ব্যর্থ হয়েছে');
       }
-    } catch (err) {
-      console.error(err);
-      setSubmitMessage('প্রকাশ করার সময় সার্ভার সংযোগে ত্রুটি ঘটেছে।');
+    } catch (err: any) {
+      alert('সংবাদ প্রকাশ করতে সমস্যা হয়েছে: ' + (err.message || 'ত্রুটি'));
     } finally {
       setIsSubmittingArticle(false);
-    }
-  };
-
-  // Delete article
-  const handleDeleteArticle = async (id: string) => {
-    if (!confirm('আপনি কি নিশ্চিত যে এই নিউজটি চিরতরে মুছে ফেলতে চান?')) return;
-    try {
-      // Delete from PostgreSQL
-      const res = await fetch(`/api/news`, {
-        method: 'POST', // Check if your backend supports DELETE. Let's create a DELETE handler or delete it by calling standard DB endpoints
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: "delete", id }) // We can handle delete elegantly or filter locally
-      });
-      alert('নিউজটি সফলভাবে মডারেট করা হয়েছে!');
-      await onRefreshNews();
-    } catch (err) {
-      alert('মুছে ফেলা সম্ভব হয়নি।');
     }
   };
 
@@ -191,7 +175,7 @@ export default function AdminPanel({
       if (res.ok) {
         alert('সোশ্যাল মিডিয়া সংবাদ পোস্ট সফলভাবে সিঙ্ক হয়েছে!');
         setNewSocial({
-          portalName: 'প্রথমা আলো',
+          portalName: 'দি ইনভেস্টিগেশন',
           content: '',
           hashtags: ''
         });
@@ -220,14 +204,14 @@ export default function AdminPanel({
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-md mx-auto my-12 bg-white border border-slate-200 p-6 shadow-none relative" id="admin-login-card">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-900"></div>
+      <div className="max-w-md mx-auto my-12 bg-white border border-slate-200 p-6 shadow-sm relative" id="admin-login-card">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-red-600"></div>
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-slate-950 text-white rounded-full flex items-center justify-center mx-auto mb-3 border border-slate-800">
-            <Lock className="w-6 h-6 text-purple-400" />
+          <div className="w-12 h-12 bg-slate-950 text-white rounded-none flex items-center justify-center mx-auto mb-3 border border-slate-800">
+            <Lock className="w-6 h-6 text-red-500" />
           </div>
-          <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide"> প্রথমা আলো - এডমিন প্যানেল</h3>
-          <p className="text-[11px] text-slate-500 mt-1">মডারেশন সেল এবং ডাটাবেজ পরিচালনার জন্য সাইন-ইন করুন</p>
+          <h3 className="text-sm font-black text-slate-950 uppercase tracking-wide">দি ইনভেস্টিগেশন - এডমিন প্যানেল</h3>
+          <p className="text-[11px] text-slate-500 mt-1">মডারেশন সেল ও অটোমেশন ইঞ্জিন পরিচালনার জন্য সাইন-ইন করুন</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -235,10 +219,10 @@ export default function AdminPanel({
             <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">প্রবেশ পাসওয়ার্ড (Password):</label>
             <input
               type="password"
-              placeholder="পাসওয়ার্ড লিখুন (উদা: admin)"
+              placeholder="পাসওয়ার্ড লিখুন (ডেমো: admin)"
               value={adminPassword}
               onChange={(e) => setAdminPassword(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-none px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-800 focus:bg-white"
+              className="w-full bg-slate-50 border border-slate-300 rounded-none px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-red-600 focus:bg-white"
               required
             />
           </div>
@@ -252,33 +236,33 @@ export default function AdminPanel({
 
           <button
             type="submit"
-            className="w-full bg-slate-900 border border-slate-950 hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-none transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            className="w-full bg-slate-950 border border-slate-950 hover:bg-slate-800 text-white font-bold text-xs py-2 rounded-none transition-all cursor-pointer flex items-center justify-center gap-1.5"
           >
-            <Unlock className="w-4 h-4 text-purple-400" /> প্রবেশ করুন (Admin Login)
+            <Unlock className="w-4 h-4 text-red-400" /> প্রবেশ করুন (Admin Login)
           </button>
         </form>
 
         <div className="text-center mt-4 border-t border-slate-100 pt-3 text-[10px] text-slate-400">
-          * পাসওয়ার্ড ডেমো: <span className="font-bold text-slate-600">admin</span>
+          * পাসওয়ার্ড: <span className="font-bold text-slate-700">admin</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-none p-4 md:p-6 shadow-none space-y-6" id="admin-panel-dashboard">
+    <div className="bg-white border border-slate-200 rounded-none p-4 md:p-6 shadow-sm space-y-6" id="admin-panel-dashboard">
       
       {/* Admin Panel Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-slate-900 text-white">
-            <Shield className="w-5 h-5 text-purple-400" />
+          <div className="p-1.5 bg-slate-950 text-white">
+            <Shield className="w-5 h-5 text-red-500" />
           </div>
           <div>
             <h2 className="text-sm md:text-base font-black text-slate-950 uppercase tracking-wider flex items-center gap-1.5">
-              মডারেশন ও ডাটাবেজ প্যানেল <span className="bg-purple-700 text-white font-mono text-[9px] px-1.5 py-0.5 rounded-none font-bold">SECURE</span>
+              সম্পাদকীয় ও অটোমেশন কন্ট্রোল স্টেশন <span className="bg-red-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded-none font-bold">LIVE</span>
             </h2>
-            <p className="text-[10px] text-slate-500">সম্পাদকীয় মডারেশন, এআই ক্রলার নিয়ন্ত্রণ ও সংবাদের গুণগত মান নিয়ন্ত্রণ সেল</p>
+            <p className="text-[10px] text-slate-500">স্বয়ংক্রিয় আরএসএস সিন্ডিকেশন ও ডাটাবেজ মডারেশন সেল | প্রকাশক: মেহেদী হাসান</p>
           </div>
         </div>
 
@@ -295,15 +279,15 @@ export default function AdminPanel({
         <button
           onClick={() => setActiveTab('dashboard')}
           className={`flex items-center gap-1.5 px-4 py-2.5 font-bold text-xs border-r border-slate-200 transition-all cursor-pointer ${
-            activeTab === 'dashboard' ? 'bg-white text-slate-950 font-black border-t-2 border-t-slate-900' : 'text-slate-600 hover:bg-slate-100'
+            activeTab === 'dashboard' ? 'bg-white text-slate-950 font-black border-t-2 border-t-red-600' : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          <Terminal className="w-4 h-4 text-slate-600" /> ড্যাশবোর্ড ও ক্রলার
+          <Rss className="w-4 h-4 text-red-600" /> স্বয়ংক্রিয় আরএসএস ও ড্যাশবোর্ড
         </button>
         <button
           onClick={() => setActiveTab('articles')}
           className={`flex items-center gap-1.5 px-4 py-2.5 font-bold text-xs border-r border-slate-200 transition-all cursor-pointer ${
-            activeTab === 'articles' ? 'bg-white text-slate-950 font-black border-t-2 border-t-slate-900' : 'text-slate-600 hover:bg-slate-100'
+            activeTab === 'articles' ? 'bg-white text-slate-950 font-black border-t-2 border-t-red-600' : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <FileText className="w-4 h-4 text-slate-600" /> নিউজ আর্টিকেল প্রকাশ ও সংশোধন
@@ -311,10 +295,10 @@ export default function AdminPanel({
         <button
           onClick={() => setActiveTab('social')}
           className={`flex items-center gap-1.5 px-4 py-2.5 font-bold text-xs border-r border-slate-200 transition-all cursor-pointer ${
-            activeTab === 'social' ? 'bg-white text-slate-950 font-black border-t-2 border-t-slate-900' : 'text-slate-600 hover:bg-slate-100'
+            activeTab === 'social' ? 'bg-white text-slate-950 font-black border-t-2 border-t-red-600' : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          <Radio className="w-4 h-4 text-slate-600" /> সোশ্যাল নিউজ সিঙ্ক ও তৈরি
+          <Radio className="w-4 h-4 text-slate-600" /> সোশ্যাল নিউজ ফিড পরিচালনা
         </button>
       </div>
 
@@ -325,7 +309,7 @@ export default function AdminPanel({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-slate-50 border border-slate-200 p-4 flex justify-between items-center">
               <div>
-                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">টোটাল নিউজ আর্টিকেল</p>
+                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">ডাটাবেজ নিউজ সংখ্যা</p>
                 <p className="text-xl font-black font-mono text-slate-900 mt-1">{newsList.length} টি</p>
               </div>
               <FileText className="w-8 h-8 text-slate-400" />
@@ -333,7 +317,7 @@ export default function AdminPanel({
 
             <div className="bg-slate-50 border border-slate-200 p-4 flex justify-between items-center">
               <div>
-                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">টোটাল সোশ্যাল মিডিয়া নিউজ</p>
+                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">সোশ্যাল মিডিয়া পোস্ট</p>
                 <p className="text-xl font-black font-mono text-slate-900 mt-1">{socialList.length} টি</p>
               </div>
               <Radio className="w-8 h-8 text-slate-400" />
@@ -341,60 +325,66 @@ export default function AdminPanel({
 
             <div className="bg-slate-50 border border-slate-200 p-4 flex justify-between items-center">
               <div>
-                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">সিস্টেম ক্রলার স্ট্যাটাস</p>
-                <p className="text-sm font-black text-emerald-600 mt-1.5">অনলাইন ও সক্রিয়</p>
+                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">অটোমেশন স্ট্যাটাস</p>
+                <p className="text-sm font-black text-emerald-600 mt-1.5">২৪ ঘণ্টার স্বয়ংক্রিয় সিঙ্ক সক্রিয়</p>
               </div>
               <CheckCircle className="w-8 h-8 text-emerald-500" />
             </div>
           </div>
 
-          {/* AI Aggregator Controls & Logs */}
+          {/* RSS Aggregator Controls & Logs */}
           <div className="bg-slate-950 text-white p-5 border border-slate-900 rounded-none space-y-4">
             <div className="flex flex-wrap justify-between items-center border-b border-slate-900 pb-3 gap-3">
               <div className="flex items-center gap-2">
-                <Radio className={`w-5 h-5 text-red-500 ${aggregatorStatus.isProcessing ? 'animate-pulse' : ''}`} />
+                <Rss className={`w-5 h-5 text-red-500 ${aggregatorStatus.isProcessing ? 'animate-pulse' : ''}`} />
                 <div>
-                  <h4 className="text-xs md:text-sm font-black text-white uppercase tracking-wider">এআই নিউজ ক্রলার কন্ট্রোল স্টেশন</h4>
-                  <p className="text-[10px] text-slate-400">জেমিনি ৩.৫ ফ্ল্যাশ এবং গুগল সার্চ গ্রাউন্ডিং সমন্বয়</p>
+                  <h4 className="text-xs md:text-sm font-black text-white uppercase tracking-wider">
+                    স্বয়ংক্রিয় আরএসএস সিন্ডিকেশন ও সংবাদ সংগ্রাহক
+                  </h4>
+                  <p className="text-[10px] text-slate-400">
+                    প্রতিদিন দেশের ১৫টি ব্রেকিং নিউজ এবং ৫টি অনুসন্ধানী প্রতিবেদন স্বয়ংক্রিয়ভাবে সংগ্রহ ও সরবরাহ করে
+                  </p>
                 </div>
               </div>
 
               <button
                 onClick={onTriggerAggregation}
                 disabled={aggregatorStatus.isProcessing}
-                className={`font-black text-xs py-1.5 px-4 rounded-none flex items-center gap-1.5 transition-all cursor-pointer border ${
+                className={`font-black text-xs py-2 px-4 rounded-none flex items-center gap-1.5 transition-all cursor-pointer border ${
                   aggregatorStatus.isProcessing
                     ? 'bg-slate-900 border-slate-950 text-slate-600 cursor-not-allowed'
-                    : 'bg-red-700 border-red-800 text-white hover:bg-red-600'
+                    : 'bg-red-600 border-red-700 text-white hover:bg-red-700'
                 }`}
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${aggregatorStatus.isProcessing ? 'animate-spin' : ''}`} />
-                {aggregatorStatus.isProcessing ? "ক্রলিং চলছে..." : "ম্যানুয়াল ক্রলার অ্যাক্টিভেট করুন"}
+                {aggregatorStatus.isProcessing ? "সংবাদ সংগ্রহ চলছে..." : "এখনই আরএসএস সিঙ্ক করুন"}
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-900 border border-slate-800 p-3">
               <div>
-                <span className="text-slate-500">সর্বশেষ ক্রলিং রান সম্পন্ন:</span>
-                <p className="font-bold text-slate-200 mt-0.5">{aggregatorStatus.lastRun}</p>
+                <span className="text-slate-400">সর্বশেষ সিন্ডিকেশন সম্পন্ন:</span>
+                <p className="font-bold text-slate-100 mt-0.5">{aggregatorStatus.lastRun}</p>
               </div>
               <div>
-                <span className="text-slate-500">নতুন সংগৃহীত আর্টিকেলের সংখ্যা:</span>
-                <p className="font-bold text-red-400 mt-0.5">{aggregatorStatus.addedCount} টি সংবাদ</p>
+                <span className="text-slate-400">সক্রিয় সংবাদ সংগ্রহ সংখ্যা:</span>
+                <p className="font-bold text-red-400 mt-0.5">১৫টি ব্রেকিং ও ৫টি অনুসন্ধানী প্রতিবেদন</p>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">রিমোট সিঙ্ক ক্রলার সিস্টেম লগ (Crawl Log Monitor):</span>
-              <div className="bg-slate-950 p-3 font-mono text-[9px] text-slate-300 border border-slate-800 max-h-48 overflow-y-auto space-y-1">
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                স্বয়ংক্রিয় আরএসএস ও ডাটাবেজ সিস্টেম লগ (Sync Logs):
+              </span>
+              <div className="bg-slate-950 p-3 font-mono text-[9.5px] text-slate-300 border border-slate-800 max-h-48 overflow-y-auto space-y-1">
                 {aggregatorStatus.log && aggregatorStatus.log.length > 0 ? (
                   aggregatorStatus.log.map((line, i) => (
                     <div key={i} className="border-b border-slate-900 pb-0.5 last:border-0">
-                      <span className="text-purple-400 font-bold">&gt;&gt;</span> {line}
+                      <span className="text-red-500 font-bold">&gt;&gt;</span> {line}
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-600 italic">কোনো রান লগ পাওয়া যায়নি।</p>
+                  <p className="text-slate-600 italic">লগ পাওয়া যায়নি।</p>
                 )}
               </div>
             </div>
@@ -407,7 +397,7 @@ export default function AdminPanel({
           {/* Create new article form */}
           <div className="bg-slate-50 border border-slate-200 p-4 md:p-5">
             <h4 className="text-xs md:text-sm font-black text-slate-900 border-b border-slate-200 pb-2 mb-4 uppercase tracking-wide flex items-center gap-1.5">
-              <PlusCircle className="w-4 h-4 text-purple-700" /> নতুন নিউজ আর্টিকেল প্রকাশ করুন
+              <PlusCircle className="w-4 h-4 text-red-600" /> নতুন অনুসন্ধানী প্রতিবেদন প্রকাশ করুন
             </h4>
 
             <form onSubmit={handleCreateArticle} className="space-y-4">
@@ -416,71 +406,71 @@ export default function AdminPanel({
                   <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">আর্টিকেলের শিরোনাম (News Title):</label>
                   <input
                     type="text"
-                    placeholder="সংবাদের বড় আকর্ষণীয় শিরোনাম লিখুন..."
+                    placeholder="অনুসন্ধানী শিরোনাম..."
                     value={newArticle.title}
                     onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
-                    className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
+                    className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-red-600"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">প্রতিবেদকের নাম / উৎস (Reporter/Source):</label>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">প্রতিবেদকের নাম / উৎস:</label>
                   <input
                     type="text"
                     value={newArticle.author}
                     onChange={(e) => setNewArticle({ ...newArticle, author: e.target.value })}
-                    className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
+                    className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-red-600"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">সংবাদ সারসংক্ষেপ (Excerpt/Short Summary):</label>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">সংবাদ সারসংক্ষেপ (Excerpt):</label>
                 <textarea
-                  placeholder="সংবাদের একটি আকর্ষণীয় ও সংক্ষিপ্ত বিবরণ লিখুন যা কার্ডে দেখানো হবে..."
+                  placeholder="সংবাদের একটি আকর্ষণীয় সারসংক্ষেপ..."
                   value={newArticle.excerpt}
                   onChange={(e) => setNewArticle({ ...newArticle, excerpt: e.target.value })}
                   rows={2}
-                  className="w-full bg-white border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
+                  className="w-full bg-white border border-slate-300 p-2 text-xs text-slate-800 focus:outline-none focus:border-red-600"
                   required
                 ></textarea>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">সংবাদের মূল বিষয়বস্তু (Main Article Body Text):</label>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">সংবাদের মূল বিষয়বস্তু (Body Text):</label>
                 <textarea
-                  placeholder="বিস্তারিত অনুসন্ধানী প্রতিবেদনটি এখানে বিস্তারিত লিখুন (প্যারাগ্রাফ আলাদা করতে এন্টার প্রেস করুন)..."
+                  placeholder="পূর্ণাঙ্গ অনুসন্ধানী প্রতিবেদন..."
                   value={newArticle.body}
                   onChange={(e) => setNewArticle({ ...newArticle, body: e.target.value })}
                   rows={6}
-                  className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
+                  className="w-full bg-white border border-slate-300 p-2.5 text-xs text-slate-800 focus:outline-none focus:border-red-600 font-sans"
                   required
                 ></textarea>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">ক্যাটাগরি নির্ধারণ (Category):</label>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">ক্যাটাগরি:</label>
                   <select
                     value={newArticle.category}
                     onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
                     className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none"
                   >
-                    <option value="rights">অধিকার কথা (Advocacy)</option>
-                    <option value="deprived">বঞ্চিতের কান্না (Injustices/Dowry/Violence)</option>
-                    <option value="success">সফলতার গল্প (Female success stories)</option>
+                    <option value="rights">বিশেষ অনুসন্ধান (Investigative)</option>
+                    <option value="deprived">বঞ্চিতের কান্না ও দুর্নীতি</option>
+                    <option value="success">সফলতার গল্প</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">আবেগদীপ্ত উক্তি (Optional Bold Quote Banner):</label>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1 uppercase">উদ্ধৃতি / কোটেশন (Bold Quote):</label>
                   <input
                     type="text"
-                    placeholder="নিপীড়িতের কান্না বা উদ্যোক্তার প্রেরণাদায়ক উক্তি..."
+                    placeholder="অনুসন্ধানী মন্তব্য বা উক্তি..."
                     value={newArticle.quote}
                     onChange={(e) => setNewArticle({ ...newArticle, quote: e.target.value })}
-                    className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
+                    className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-red-600"
                   />
                 </div>
               </div>
@@ -494,77 +484,32 @@ export default function AdminPanel({
               <button
                 type="submit"
                 disabled={isSubmittingArticle}
-                className="bg-slate-900 border border-slate-950 hover:bg-slate-800 text-white font-bold text-xs py-2 px-5 rounded-none flex items-center gap-1.5 ml-auto cursor-pointer"
+                className="bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs py-2 px-5 rounded-none flex items-center gap-1.5 ml-auto cursor-pointer"
               >
                 {isSubmittingArticle ? "প্রকাশ হচ্ছে..." : "নিউজ ডাটাবেজে প্রকাশ করুন"}
               </button>
             </form>
-          </div>
-
-          {/* Manage existing articles */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-950 uppercase tracking-wide border-l-4 border-slate-900 pl-2">
-              প্রকাশিত সংবাদের তালিকা ও মডারেশন সেকশন
-            </h4>
-
-            <div className="border border-slate-200 overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 uppercase font-black text-[10.5px]">
-                    <th className="p-3">শিরোনাম</th>
-                    <th className="p-3">ক্যাটাগরি</th>
-                    <th className="p-3">প্রকাশক/লেখক</th>
-                    <th className="p-3">তারিখ</th>
-                    <th className="p-3 text-right">অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {newsList.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 font-bold text-slate-950 max-w-xs truncate" title={item.title}>{item.title}</td>
-                      <td className="p-3">
-                        <span className="bg-slate-100 text-slate-800 text-[10px] font-bold px-2 py-0.5 border border-slate-200 rounded">
-                          {item.categoryLabel}
-                        </span>
-                      </td>
-                      <td className="p-3 text-slate-600">{item.author}</td>
-                      <td className="p-3 text-slate-500 font-mono">{item.date}</td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => handleDeleteArticle(item.id)}
-                          className="text-red-700 hover:text-red-900 hover:bg-red-50 p-1.5 rounded transition-all cursor-pointer"
-                          title="নিউজটি মডারেট/ডিলেট করুন"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'social' && (
         <div className="space-y-6">
-          {/* Create custom social media post */}
           <div className="bg-slate-50 border border-slate-200 p-4 md:p-5">
             <h4 className="text-xs md:text-sm font-black text-slate-900 border-b border-slate-200 pb-2 mb-4 uppercase tracking-wide flex items-center gap-1.5">
-              <Radio className="w-4 h-4 text-purple-700" /> নতুন সোশ্যাল মিডিয়া পোস্ট বা প্রতিক্রিয়া তৈরি করুন
+              <Radio className="w-4 h-4 text-red-600" /> নতুন সোশ্যাল মিডিয়া পোস্ট বা প্রতিক্রিয়া
             </h4>
 
             <form onSubmit={handleCreateSocial} className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">প্রকাশক পেজ / নিউজ পোর্টাল নাম:</label>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">প্রকাশক পেজ:</label>
                   <select
                     value={newSocial.portalName}
                     onChange={(e) => setNewSocial({ ...newSocial, portalName: e.target.value })}
                     className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800"
                   >
-                    <option value="প্রথমা আলো">প্রথমা আলো</option>
+                    <option value="দি ইনভেস্টিগেশন">দি ইনভেস্টিগেশন</option>
                     <option value="প্রথম আলো">প্রথম আলো</option>
                     <option value="বিবিসি বাংলা">বিবিসি বাংলা</option>
                     <option value="ডয়চে ভেলে বাংলা">ডয়চে ভেলে বাংলা</option>
@@ -575,7 +520,7 @@ export default function AdminPanel({
                   <label className="block text-[11px] font-bold text-slate-700 mb-1">হ্যাশট্যাগ তালিকা (কমা দিয়ে আলাদা করুন):</label>
                   <input
                     type="text"
-                    placeholder="উদা: নারীঅধিকার, ময়মনসিংহ, স্বপ্না_সরকার"
+                    placeholder="উদা: ইনভেস্টিগেশন, দুর্নীতি, তেল_সিন্ডিকেট"
                     value={newSocial.hashtags}
                     onChange={(e) => setNewSocial({ ...newSocial, hashtags: e.target.value })}
                     className="w-full bg-white border border-slate-300 px-3 py-1.5 text-xs text-slate-800 focus:outline-none"
@@ -584,9 +529,9 @@ export default function AdminPanel({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">সোশ্যাল পোস্টের বিবরণ (Content Body):</label>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">পোস্টের বিবরণ:</label>
                 <textarea
-                  placeholder="সংবাদের বিবরণ বা ফেসবুকের স্ট্যাটাস রূপটি এখানে টাইপ করুন..."
+                  placeholder="সংবাদ বিবরণ বা সামাজিক প্রতিক্রিয়া..."
                   value={newSocial.content}
                   onChange={(e) => setNewSocial({ ...newSocial, content: e.target.value })}
                   rows={4}
@@ -598,48 +543,11 @@ export default function AdminPanel({
               <button
                 type="submit"
                 disabled={isSubmittingSocial}
-                className="bg-slate-900 border border-slate-950 hover:bg-slate-800 text-white font-bold text-xs py-2 px-5 rounded-none flex items-center gap-1.5 ml-auto cursor-pointer"
+                className="bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs py-2 px-5 rounded-none flex items-center gap-1.5 ml-auto cursor-pointer"
               >
-                {isSubmittingSocial ? "পোস্ট সিঙ্ক হচ্ছে..." : "সোশ্যাল ফিডে যুক্ত করুন"}
+                {isSubmittingSocial ? "পোস্ট হচ্ছে..." : "সোশ্যাল ফিডে যুক্ত করুন"}
               </button>
             </form>
-          </div>
-
-          {/* Manage social feed */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-black text-slate-950 uppercase tracking-wide border-l-4 border-slate-900 pl-2">
-              সোশ্যাল নিউজ মডারেশন তালিকা
-            </h4>
-
-            <div className="border border-slate-200 max-h-[400px] overflow-y-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead className="sticky top-0 bg-white z-10 border-b border-slate-200">
-                  <tr className="bg-slate-50 text-slate-700 uppercase font-black text-[10.5px]">
-                    <th className="p-3">উৎস/পোর্টাল</th>
-                    <th className="p-3">সংবাদ বিবরণী</th>
-                    <th className="p-3">সহমত</th>
-                    <th className="p-3 text-right">মডারেশন</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {socialList.map((post) => (
-                    <tr key={post.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-3 font-extrabold text-slate-950">{post.portalName}</td>
-                      <td className="p-3 max-w-md truncate text-slate-700">{post.content}</td>
-                      <td className="p-3 font-mono text-slate-600">{post.likes}</td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => handleDeleteSocial(post.id)}
-                          className="text-red-700 hover:text-red-900 p-1.5 hover:bg-red-50 rounded transition-all cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           </div>
         </div>
       )}

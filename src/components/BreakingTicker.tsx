@@ -1,45 +1,63 @@
-import React, { useState } from 'react';
-import { AlertTriangle, ChevronLeft, ChevronRight, Volume2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { NewsItem } from '../types.ts';
 
 interface BreakingTickerProps {
   onSelectArticle: (text: string) => void;
+  breakingNewsList?: NewsItem[];
 }
 
-export default function BreakingTicker({ onSelectArticle }: BreakingTickerProps) {
+export default function BreakingTicker({ onSelectArticle, breakingNewsList = [] }: BreakingTickerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const tickerItems = [
-    "ময়মনসিংহের তথাকথিত নেত্রী স্বপ্না সরকার ও মেহেদী সিন্ডিকেটের অমানবিক ব্ল্যাকমেইল চক্রের বিরুদ্ধে প্রথমা আলোর বিশেষ অনুসন্ধান জারি।",
-    "ছাত্রী মেসের অন্তরালে মাদক ও দেহ ব্যবসা সিন্ডিকেটের অবাধ বিচরণ; অতিষ্ঠ মতিঝিলের সচেতন অভিভাবক ও যুবসমাজ।",
-    "ডিবি অফিসের মাসোহারা জাল ও বিগত সরকারের পুলিশ কর্মকর্তাদের টাকার আত্মীয়তার নাটক ফাঁস!",
-    "যৌতুক ও পারিবারিক সহিংসতা দমনে আরামবাগে ফ্রি লিগ্যাল এইড কেন্দ্রের নতুন ডেস্ক চালু; অভিযোগ জানাতে পারবেন সরাসরি অনলাইনে।",
-    "বাগেরহাট ও ঢাকায় বাল্যবিবাহ রুখে দিয়ে অনন্য দৃষ্টান্ত স্থাপন করল সাহসী কিশোরী দল।"
+  const defaultItems = [
+    "মেঘনা পেট্রোলিয়ামের গোদনাইল ডিপো ইনচার্জ মো: মাহবুবুর রহমান (ডিএস মাহবুব)-এর বিরুদ্ধে 'দি ইনভেস্টিগেশন'-এর সমন্বিত অনুসন্ধানী প্রতিবেদন প্রকাশিত।",
+    "জ্বালানি খাতে ডিপো সিন্ডিকেট ও তেল কারচুপি বন্ধে উচ্চপর্যায়ের জাতীয় তদন্ত দল গঠনের জোর দাবি।",
+    "বগুড়ার উপ-শহরে ৮ তলা হাবিবা টাওয়ার ও জলেশ্বরীতলায় সাদিয়া গার্ডেনের ফ্ল্যাট অর্জনের ভূমি রেকর্ড পর্যালোচনা।",
+    "বাজারে নিত্যপণ্যের কৃত্রিম সংকট রুখতে দেশব্যাপী জেলা প্রশাসনের সাঁড়াশি অভিযান চলমান।",
+    "ব্যাংকিং খাতে শীর্ষ খেলাপি ঋণ আদায়ে কঠোর আইনি ব্যবস্থা নেওয়ার চূড়ান্ত ঘোষণা কেন্দ্রীয় ব্যাংকের।"
   ];
 
+  const items = breakingNewsList.length > 0
+    ? breakingNewsList.map(n => n.title)
+    : defaultItems;
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [items.length]);
+
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? tickerItems.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === tickerItems.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === items.length - 1 ? 0 : prev + 1));
   };
 
+  const currentHeadline = items[currentIndex] || items[0];
+
   return (
-    <div className="bg-slate-50 border-y border-slate-200 py-1.5 px-4">
+    <div className="bg-slate-100 border-y border-slate-300 py-1.5 px-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         
         {/* Urgent/Breaking Label */}
-        <div className="flex items-center gap-1 bg-red-600 text-white text-[10px] md:text-xs font-black uppercase px-2.5 py-0.5 rounded-none shadow-none shrink-0 animate-pulse">
+        <div className="flex items-center gap-1.5 bg-red-600 text-white text-[10.5px] font-black uppercase px-2.5 py-0.5 rounded-none shadow-xs shrink-0 animate-pulse">
           <AlertTriangle className="w-3.5 h-3.5" />
           ব্রেকিং নিউজ
         </div>
 
         {/* Ticker text container */}
         <div className="flex-1 overflow-hidden relative h-5 flex items-center">
-          {/* We do a beautiful sliding transition or simple static selection */}
-          <div className="w-full text-xs font-bold text-slate-900 truncate hover:text-purple-800 transition-all cursor-pointer">
-            <span className="inline-block mr-1.5 text-red-600 font-extrabold">[জরুরি]</span>
-            {tickerItems[currentIndex]}
+          <div 
+            onClick={() => onSelectArticle(currentHeadline)}
+            className="w-full text-xs font-bold text-slate-900 truncate hover:text-red-700 transition-all cursor-pointer font-serif"
+            title={currentHeadline}
+          >
+            <span className="inline-block mr-1.5 text-red-600 font-extrabold">[তাজা খবর]</span>
+            {currentHeadline}
           </div>
         </div>
 
@@ -47,14 +65,14 @@ export default function BreakingTicker({ onSelectArticle }: BreakingTickerProps)
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={handlePrev}
-            className="p-1 rounded-none bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 transition-all cursor-pointer"
+            className="p-1 bg-white hover:bg-slate-200 text-slate-800 border border-slate-300 transition-all cursor-pointer"
             title="পূর্ববর্তী"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleNext}
-            className="p-1 rounded-none bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 transition-all cursor-pointer"
+            className="p-1 bg-white hover:bg-slate-200 text-slate-800 border border-slate-300 transition-all cursor-pointer"
             title="পরবর্তী"
           >
             <ChevronRight className="w-3.5 h-3.5" />
