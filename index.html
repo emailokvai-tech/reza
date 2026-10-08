@@ -3,13 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>দি ইনভেস্টিগেশন | The Investigation - সত্যের সন্ধানে নির্ভীক অনুসন্ধানী সাংবাদিকতা</title>
-    <meta name="description" content="সত্যের সন্ধানে নির্ভীক জাতীয় ও অনুসন্ধানী অনলাইন দৈনিক পত্রিকা - দি ইনভেস্টিগেশন | প্রকাশক: মেহেদী হাসান" />
-    <meta property="og:title" content="দি ইনভেস্টিগেশন | The Investigation" />
-    <meta property="og:description" content="সত্যের সন্ধানে নির্ভীক জাতীয় ও অনুসন্ধানী অনলাইন দৈনিক পত্রিকা - দি ইনভেস্টিগেশন | প্রকাশক: মেহেদী হাসান" />
+    <title>Vulture Eyes (ভালচার আইস) | জাতীয় ও আন্তর্জাতিক অনুসন্ধানী অনলাইন দৈনিক</title>
+    <meta name="description" content="Vulture Eyes (ভালচার আইস) - দুর্নীতির ওপর তীক্ষ্ণ নজরদারি। Operated under UK Company Registration No: 17041560. সম্পাদক: Tarek Anwar Khan | প্রকাশক: দেবাশীষ ঘোষ মিশু।" />
+    <meta property="og:title" content="Vulture Eyes (ভালচার আইস) - সত্যের সন্ধানে নির্ভীক অনুসন্ধানী পোর্টাল" />
+    <meta property="og:description" content="Operated under UK Company Registration No: 17041560 (Registered in England & Wales). সম্পাদক: Tarek Anwar Khan | প্রকাশক: দেবাশীষ ঘোষ মিশু। এটি দুর্নীতি দমন কমিশনের সাপোর্টিভ একটি প্রকাশনা সংস্থা।" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@400;500;600;700;800;900&family=Noto+Serif+Bengali:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script>
+      // Gracefully handle harmless Vite HMR WebSocket connection notifications in dev iframe
+      window.addEventListener('unhandledrejection', function (e) {
+        var reason = e && e.reason;
+        var msg = (reason && (reason.message || String(reason))) || '';
+        if (msg.includes('WebSocket') || msg.includes('vite:ws')) {
+          e.preventDefault();
+        }
+      });
+      window.addEventListener('error', function (e) {
+        var msg = (e && (e.message || '')) || '';
+        if (msg.includes('WebSocket') || (e.filename && e.filename.includes('@vite/client'))) {
+          e.preventDefault();
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

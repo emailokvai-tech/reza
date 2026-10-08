@@ -69,7 +69,7 @@ export default function Header({ onSearch, activeCategory, setActiveCategory }: 
     { id: 'rights', label: 'জাতীয় ও জনস্বার্থ' },
     { id: 'legal', label: 'আইনি সহায়তা ও লিগ্যাল এইড' },
     { id: 'social', label: 'সোশ্যাল ও পাবলিক ভয়েস' },
-    { id: 'admin', label: 'এডমিন ও অটোমেশন' },
+    { id: 'admin', label: 'এডমিন ড্যাশবোর্ড (/admin)' },
   ];
 
   return (
@@ -92,8 +92,22 @@ export default function Header({ onSearch, activeCategory, setActiveCategory }: 
             </span>
             <span className="hidden md:inline text-slate-600">|</span>
             <span className="hidden md:inline text-slate-300 font-bold">
-              প্রকাশক: <strong className="text-white font-black">মেহেদী হাসান</strong>
+              সম্পাদক: <strong className="text-white font-black">Tarek Anwar Khan</strong>
             </span>
+            <span className="hidden lg:inline text-slate-600">|</span>
+            <span className="hidden lg:inline text-slate-300 font-bold">
+              প্রকাশক: <strong className="text-white font-black">দেবাশীষ ঘোষ মিশু</strong>
+            </span>
+            <span className="hidden xl:inline text-slate-600">|</span>
+            <a 
+              href="https://find-and-update.company-information.service.gov.uk/company/17041560" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hidden xl:inline text-amber-300 hover:text-amber-200 font-mono text-[9px] underline underline-offset-2"
+              title="UK Company Registration 17041560 যাচাই করুন"
+            >
+              UK Co Reg: 17041560
+            </a>
           </div>
 
           {/* Emergency Helplines */}

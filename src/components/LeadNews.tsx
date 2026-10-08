@@ -168,7 +168,7 @@ export default function LeadNews({ newsList, onLike, onShare, onRefresh }: LeadN
               <span className="text-slate-600 font-bold">{leadArticle.date}</span>
               <span className="text-slate-400 font-bold">•</span>
               <span className="bg-slate-100 text-slate-800 font-bold px-2 py-0.5 border border-slate-300">
-                বিশেষ তদন্ত সেল | দি ইনভেস্টিগেশন
+                বিশেষ তদন্ত সেল | Vulture Eyes
               </span>
             </div>
 
@@ -196,7 +196,7 @@ export default function LeadNews({ newsList, onLike, onShare, onRefresh }: LeadN
                 <Quote className="w-6 h-6 text-red-500/30 absolute -top-2 -left-1" />
                 <p className="font-semibold text-slate-100">"{leadArticle.quote}"</p>
                 <span className="block text-right text-[10.5px] text-red-400 font-mono font-bold mt-2">
-                  — অনুসন্ধানী মতামত, দি ইনভেস্টিগেশন
+                  — অনুসন্ধানী মতামত, Vulture Eyes
                 </span>
               </div>
             )}
@@ -357,10 +357,10 @@ export default function LeadNews({ newsList, onLike, onShare, onRefresh }: LeadN
               </h4>
             </div>
             <p className="text-[11px] text-red-100 leading-relaxed text-justify mb-3">
-              দুর্নীতি, রাষ্ট্রীয় সম্পদ আত্মসাৎ বা ক্ষমতার অপব্যবহারের গোপন অডিও, ভিডিও বা নথি থাকলে নির্ভয়ে 'দি ইনভেস্টিগেশন'-এর স্পেশাল ক্রাইম ডেস্কে তথ্য পাঠান। তথ্যদাতার পরিচয় কঠোরভাবে সুরক্ষিত থাকবে।
+              দুর্নীতি, রাষ্ট্রীয় সম্পদ আত্মসাৎ বা ক্ষমতার অপব্যবহারের গোপন অডিও, ভিডিও বা নথি থাকলে নির্ভয়ে 'Vulture Eyes'-এর স্পেশাল ক্রাইম ডেস্কে তথ্য পাঠান। তথ্যদাতার পরিচয় কঠোরভাবে সুরক্ষিত থাকবে।
             </p>
             <div className="bg-red-900/80 p-2 text-center text-xs font-mono font-black border border-red-500/40">
-              হটলাইন ইমেইল: desk@theinvestigation.bd
+              হটলাইন ইমেইল: desk@vultureeyes.com
             </div>
           </div>
         </aside>

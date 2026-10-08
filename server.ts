@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import http from "http";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { harvestAutomatedNews } from "./newsAggregator.ts";
@@ -22,10 +23,16 @@ setInterval(async () => {
 // Start Express and Vite server
 async function startServer() {
   const isProduction = process.env.NODE_ENV === "production";
+  const httpServer = http.createServer(app);
   
   if (!isProduction) {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: {
+          server: httpServer,
+        },
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
@@ -37,8 +44,8 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`দি ইনভেস্টিগেশন সার্ভার পোর্ট ${PORT}-এ সফলভাবে চালু হয়েছে।`);
+  httpServer.listen(PORT, "0.0.0.0", () => {
+    console.log(`ভালচার আইস (Vulture Eyes) সার্ভার পোর্ট ${PORT}-এ সফলভাবে চালু হয়েছে।`);
     // Run automated news harvest right after start
     initAutomatedNews();
   });

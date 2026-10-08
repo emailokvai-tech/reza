@@ -5,6 +5,8 @@ import { harvestAutomatedNews } from "./newsAggregator.ts";
 import {
   getAllNews,
   insertNews,
+  updateNews,
+  deleteNews,
   likeNewsArticle,
   shareNewsArticle,
   addCommentToArticle,
@@ -33,7 +35,7 @@ export let lastAggregationStatus = {
 
 // Run automated news harvest on launch
 export async function initAutomatedNews() {
-  console.log("Initializing automated news syndication engine for দি ইনভেস্টিগেশন...");
+  console.log("Initializing automated news syndication engine for Vulture Eyes (ভালচার আইস)...");
   try {
     const result = await harvestAutomatedNews();
     lastAggregationStatus = {
@@ -53,8 +55,10 @@ export async function initAutomatedNews() {
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "ok", 
-    newspaper: "দি ইনভেস্টিগেশন",
-    publisher: "মেহেদী হাসান",
+    newspaper: "Vulture Eyes (ভালচার আইস)",
+    editor: "Tarek Anwar Khan",
+    publisher: "দেবাশীষ ঘোষ মিশু",
+    ukRegistrationNo: "17041560",
     time: new Date().toISOString() 
   });
 });
@@ -86,6 +90,27 @@ app.post("/api/news", async (req, res) => {
     }
     const saved = await insertNews(article);
     res.json(saved);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/news/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    const updated = await updateNews(id, updates);
+    res.json(updated);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete("/api/news/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await deleteNews(id);
+    res.json({ success: true, deletedId: id });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

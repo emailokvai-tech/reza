@@ -268,3 +268,65 @@ export async function seedNewsDatabase(initialNews: NewsItem[]) {
     console.warn("Error seeding news database, using memory store:", error);
   }
 }
+
+// Update existing news article
+export async function updateNews(id: string, updates: Partial<NewsItem>): Promise<NewsItem> {
+  const existingIndex = inMemoryNewsStore.findIndex(i => i.id === id);
+  if (existingIndex >= 0) {
+    inMemoryNewsStore[existingIndex] = {
+      ...inMemoryNewsStore[existingIndex],
+      ...updates
+    };
+  }
+
+  try {
+    if (process.env.SQL_HOST) {
+      const updateData: any = {};
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.excerpt !== undefined) updateData.excerpt = updates.excerpt;
+      if (updates.body !== undefined) updateData.body = updates.body;
+      if (updates.category !== undefined) updateData.category = updates.category;
+      if (updates.categoryLabel !== undefined) updateData.categoryLabel = updates.categoryLabel;
+      if (updates.image !== undefined) updateData.image = updates.image || null;
+      if (updates.quote !== undefined) updateData.quote = updates.quote || null;
+      if (updates.author !== undefined) updateData.author = updates.author;
+      if (updates.date !== undefined) updateData.date = updates.date;
+
+      const [row] = await db
+        .update(news)
+        .set(updateData)
+        .where(eq(news.id, id))
+        .returning();
+
+      if (row) {
+        return mapToNewsItem(row);
+      }
+    }
+  } catch (error) {
+    console.warn("Database update error, using updated memory store:", error);
+  }
+
+  if (existingIndex >= 0) {
+    return inMemoryNewsStore[existingIndex];
+  }
+  throw new Error(`Article with id ${id} not found`);
+}
+
+// Delete a news article
+export async function deleteNews(id: string): Promise<boolean> {
+  const existingIndex = inMemoryNewsStore.findIndex(i => i.id === id);
+  if (existingIndex >= 0) {
+    inMemoryNewsStore.splice(existingIndex, 1);
+  }
+
+  try {
+    if (process.env.SQL_HOST) {
+      await db.delete(news).where(eq(news.id, id));
+    }
+  } catch (error) {
+    console.warn("Database delete error, removed from memory store:", error);
+  }
+
+  return true;
+}
+

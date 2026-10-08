@@ -20,6 +20,7 @@ import LegalConsultant from './components/LegalConsultant.tsx';
 import SocialMediaFeed from './components/SocialMediaFeed.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
 import InvestigationLogo from './components/InvestigationLogo.tsx';
+import NewsImage from './components/NewsImage.tsx';
 import { NewsItem } from './types.ts';
 import { LEAD_INVESTIGATIVE_ARTICLE } from './data/leadInvestigativeArticle.ts';
 
@@ -27,8 +28,44 @@ export default function App() {
   const { user } = useAuth();
   
   // Navigation & Filtering States
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeCategory, setActiveCategory] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/admin' || hash === '#admin' || hash === '#/admin') {
+        return 'admin';
+      }
+    }
+    return 'all';
+  });
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Handle URL change or history back/forward for /admin
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path === '/admin' || hash === '#admin' || hash === '#/admin') {
+        setActiveCategory('admin');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handlePopState);
+    };
+  }, []);
+
+  // Update URL hash when category changes to /admin
+  const handleCategorySelect = (cat: string) => {
+    setActiveCategory(cat);
+    if (cat === 'admin') {
+      window.history.pushState(null, '', '/admin');
+    } else if (window.location.pathname === '/admin') {
+      window.history.pushState(null, '', '/');
+    }
+  };
   
   // News Data States
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
@@ -182,7 +219,7 @@ export default function App() {
       {/* Top Navigation & Brand Section */}
       <Header 
         activeCategory={activeCategory} 
-        setActiveCategory={setActiveCategory} 
+        setActiveCategory={handleCategorySelect} 
         onSearch={(query) => setSearchQuery(query)} 
       />
 
@@ -294,6 +331,16 @@ export default function App() {
                             <Calendar className="w-3 h-3 text-slate-400" />
                             {item.date}
                           </span>
+                        </div>
+
+                        {/* News Card Featured Image with Skeleton / Blur-up */}
+                        <div className="mb-3 overflow-hidden border border-slate-200">
+                          <NewsImage 
+                            src={item.image} 
+                            alt={item.title} 
+                            aspectRatio="video" 
+                            className="w-full hover:scale-103 transition-transform duration-300"
+                          />
                         </div>
 
                         {/* Title */}
@@ -421,41 +468,108 @@ export default function App() {
         )}
       </main>
 
-      {/* Brand Footer Section */}
-      <footer className="bg-slate-950 text-slate-300 py-10 px-4 mt-12 border-t-4 border-red-600">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-          <div className="space-y-3">
-            <InvestigationLogo variant="header" />
-            <p className="text-xs text-slate-400 leading-relaxed text-justify mt-2">
-              সত্যের সন্ধানে নির্ভীক জাতীয় ও অনুসন্ধানী অনলাইন দৈনিক পত্রিকা। রাষ্ট্রীয় দুর্নীতি, ক্ষমতার অপব্যবহার, জ্বালানি সিন্ডিকেট ও সামাজিক বৈষম্যের বিরুদ্ধে বস্তুনিষ্ঠ সাংবাদিকতা।
+      {/* Brand Footer Section - Clean GeneratePress Editorial Style */}
+      <footer className="bg-slate-950 text-slate-300 py-12 px-4 mt-16 border-t-4 border-red-600 font-sans">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
+          
+          {/* Column 1: Brand & Identity */}
+          <div className="space-y-3 md:col-span-1">
+            <InvestigationLogo variant="footer" />
+            <p className="text-xs text-slate-400 leading-relaxed text-justify mt-3 font-sans">
+              দুর্নীতির বিরুদ্ধে আপসহীন অনুসন্ধানী সাংবাদিকতা। রাষ্ট্র ও জনগণের অধিকার প্রতিষ্ঠায় সর্বদা সোচ্চার ও নির্ভরযোগ্য তথ্যভাণ্ডার।
             </p>
+            <div className="pt-2">
+              <span className="inline-block bg-slate-900 border border-slate-800 text-red-400 text-[10px] font-mono font-bold px-2.5 py-1">
+                VULTURE EYES INVESTIGATIVE DESK
+              </span>
+            </div>
           </div>
           
-          <div className="space-y-2">
-            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1 text-red-500">
-              সম্পাদনা ও প্রকাশনা তথ্য
+          {/* Column 2: Editorial & Publisher Panel */}
+          <div className="space-y-3">
+            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1.5 text-red-500 font-serif">
+              সম্পাদকীয় ও প্রকাশনা প্যানেল
             </h4>
-            <div className="text-xs leading-relaxed text-slate-300 space-y-1">
-              <p>প্রকাশক: <strong className="text-white font-black">মেহেদী হাসান</strong></p>
-              <p>প্রধান কার্যালয়: ঢাকা, বাংলাদেশ</p>
-              <p>অনুসন্ধানী ডেস্ক: <span className="font-mono text-slate-400">investigation@theinvestigation.bd</span></p>
-              <p>জরুরি সেবা: দুদক হটলাইন ১০৬ | জাতীয় জরুরি ৯৯৯</p>
+            <div className="text-xs leading-relaxed text-slate-300 space-y-2">
+              <div>
+                <span className="text-[10px] text-slate-400 block uppercase font-mono">সম্পাদক (Editor):</span>
+                <p className="text-white font-extrabold text-[13px]">Tarek Anwar Khan</p>
+              </div>
+              <div className="pt-1">
+                <span className="text-[10px] text-slate-400 block uppercase font-mono">প্রকাশক (Publisher):</span>
+                <p className="text-white font-extrabold text-[13px]">দেবাশীষ ঘোষ মিশু</p>
+              </div>
+              <div className="pt-1 text-[11px] text-slate-400">
+                <p>বার্তা ও সম্পাদকীয় বিভাগ: <span className="font-mono text-slate-300">desk@vultureeyes.com</span></p>
+                <p>হেড অফিস: লন্ডন ও ঢাকা</p>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1 text-red-500">
-              নীতি ও আইনি বিজ্ঞপ্তি
+          {/* Column 3: UK Company Registration & Licensing */}
+          <div className="space-y-3">
+            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1.5 text-red-500 font-serif">
+              ইউকে কোম্পানি লাইসেন্স ও নিবন্ধন
             </h4>
-            <p className="text-[11.5px] leading-relaxed text-slate-400 text-justify">
-              এই পোর্টালে প্রকাশিত সকল অনুসন্ধানী প্রতিবেদন ও নথিপত্র জনস্বার্থে অকাট্য প্রমাণের ভিত্তিতে সংগৃহীত ও প্রকাশিত। তথ্যদাতার সার্বিক সুরক্ষা বাংলাদেশ ও আন্তর্জাতিক সাংবাদিকতার নীতিমালা দ্বারা সংরক্ষিত।
-            </p>
+            <div className="text-xs leading-relaxed text-slate-300 space-y-2">
+              <div className="bg-slate-900 border border-slate-800 p-3 space-y-1.5">
+                <p className="font-bold text-white text-[11.5px] leading-snug">
+                  Operated under UK Company Registration No: <span className="text-amber-400 font-mono font-extrabold">17041560</span>
+                </p>
+                <p className="text-[10.5px] text-slate-400 font-mono">
+                  (Registered in England & Wales)
+                </p>
+                <div className="pt-1.5 border-t border-slate-800">
+                  <a 
+                    href="https://find-and-update.company-information.service.gov.uk/company/17041560" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-[10.5px] px-3 py-1.5 transition-colors shadow-2xs"
+                  >
+                    <span>সরকারি ডাটাবেজে লাইসেন্স যাচাই</span>
+                    <span className="font-mono text-xs">↗</span>
+                  </a>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                UK Companies House-এর অফিশিয়াল ডেজিগনেশনে পরিচালিত।
+              </p>
+            </div>
           </div>
+
+          {/* Column 4: Policy & Anti-Corruption Commission Support */}
+          <div className="space-y-3">
+            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1.5 text-red-500 font-serif">
+              নীতিমালা ও আইনি অস্বীকৃতি
+            </h4>
+            <div className="space-y-2 text-justify">
+              <div className="bg-slate-900/90 border-l-3 border-emerald-500 p-2.5 text-[11px] text-slate-200 leading-relaxed">
+                <p className="font-bold text-emerald-400 text-[11.5px] mb-1">
+                  নীতিমালা (Policy Disclaimer):
+                </p>
+                <p className="text-slate-300 font-medium">
+                  "এটি দুর্নীতি দমন কমিশনের সাপোর্টিভ একটি প্রকাশনা সংস্থা।"
+                </p>
+              </div>
+              <p className="text-[10.5px] leading-relaxed text-slate-400">
+                সকল অনুসন্ধানী প্রতিবেদন অকাট্য দালিলিক প্রমাণের ভিত্তিতে জনস্বার্থে পরিবেশিত। তথ্যদাতার পূর্ণ নিরাপত্তা আন্তর্জাতিক হুইসেলব্লোয়ার সুরক্ষা নীতিমালার অধীন সংরক্ষিত।
+              </p>
+              <div className="text-[10px] text-slate-400 font-mono pt-1">
+                জরুরি হটলাইন: দুদক ১০৬ | পুলিশ ৯৯৯
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <div className="max-w-7xl mx-auto border-t border-slate-800 mt-8 pt-4 flex flex-wrap justify-between items-center text-[10.5px] text-slate-500 font-mono gap-2">
-          <span>&copy; {new Date().getFullYear()} দি ইনভেস্টিগেশন (The Investigation). সর্বস্বত্ব সংরক্ষিত।</span>
-          <span>প্রকাশক: মেহেদী হাসান • জাতীয় অনুসন্ধানী দৈনিক</span>
+        {/* Clean GeneratePress-style copyright sub-footer */}
+        <div className="max-w-7xl mx-auto border-t border-slate-800/80 mt-10 pt-4 flex flex-wrap justify-between items-center text-[11px] text-slate-400 font-mono gap-2">
+          <span>
+            &copy; {new Date().getFullYear()} <strong className="text-slate-200">Vulture Eyes (ভালচার আইস)</strong>. All rights reserved.
+          </span>
+          <span className="text-[10.5px]">
+            UK Co Reg: 17041560 | সম্পাদক: Tarek Anwar Khan | প্রকাশক: দেবাশীষ ঘোষ মিশু
+          </span>
         </div>
       </footer>
     </div>

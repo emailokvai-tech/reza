@@ -1,6 +1,6 @@
 {
-  "name": "দি ইনভেস্টিগেশন",
-  "description": "সত্যের সন্ধানে নির্ভীক জাতীয় ও অনুসন্ধানী অনলাইন দৈনিক পত্রিকা - দি ইনভেস্টিগেশন | প্রকাশক: মেহেদী হাসান",
+  "name": "Vulture Eyes (ভালচার আইস)",
+  "description": "Vulture Eyes (ভালচার আইস) - দুর্নীতি দমন কমিশনের সাপোর্টিভ অনুসন্ধানী অনলাইন দৈনিক। সম্পাদক: Tarek Anwar Khan | প্রকাশক: দেবাশীষ ঘোষ মিশু | UK Co Reg: 17041560",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

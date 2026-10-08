@@ -22,8 +22,8 @@ const PORTALS = [
   { name: "দ্য ডেইলি স্টার", username: "@dailystarnews", logo: "S", isVerified: true },
   { name: "যুগান্তর", username: "@JugantorOfficial", logo: "J", isVerified: true },
   { name: "কালের কণ্ঠ", username: "@KalerKantho", logo: "K", isVerified: true },
-  { name: "সময় নিউজ", username: "@SomoyNews", logo: "T", isVerified: true },
-  { name: "দি ইনভেস্টিগেশন", username: "@theinvestigation", logo: "ই", isVerified: true }
+  { name: "সময় নিউজ", username: "@SomoyNews", logo: "T", isVerified: true },
+  { name: "Vulture Eyes", username: "@vultureeyes", logo: "V", isVerified: true }
 ];
 
 // Seed templates for programmatic expansion to 105+ unique posts
