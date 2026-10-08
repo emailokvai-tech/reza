@@ -46,7 +46,15 @@ git push -u origin main
    - **Output Directory:** `dist`
 5. **Deploy** বাটনে ক্লিক করুন! কয়েক সেকেন্ডের মধ্যেই ওয়েবসাইট লাইভ হয়ে যাবে।
 
-### পদ্ধতি ২: Vercel CLI দিয়ে (টার্মিনাল থেকে)
+### পদ্ধতি ২: GitHub Actions দিয়ে অটোমেটেড ডেপ্লয় (CI/CD)
+প্রজেক্টটিতে `.github/workflows/deploy.yml` রয়েছে। আপনি চাইলে GitHub Repository Settings > Secrets and variables > Actions-এ নিচের সিক্রেটগুলো যোগ করতে পারেন:
+- `VERCEL_TOKEN`: আপনার Vercel একাউন্ট টোকেন
+- `VERCEL_ORG_ID`: Vercel Organization / Team ID
+- `VERCEL_PROJECT_ID`: Vercel Project ID
+
+এরপর প্রতিবার `main` ব্রাঞ্চে `git push` করলেই স্বয়ংক্রিয়ভাবে টেস্ট ও বিল্ড সম্পন্ন হয়ে Vercel-এ ডেপ্লয় হয়ে যাবে।
+
+### পদ্ধতি ৩: Vercel CLI দিয়ে (টার্মিনাল থেকে)
 ```bash
 # ভেরসেল সিএলআই ইনস্টল করুন (যদি না থাকে)
 npm i -g vercel
