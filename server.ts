@@ -45,7 +45,7 @@ async function startServer() {
   }
 
   httpServer.listen(PORT, "0.0.0.0", () => {
-    console.log(`ভালচার আইস (Vulture Eyes) সার্ভার পোর্ট ${PORT}-এ সফলভাবে চালু হয়েছে।`);
+    console.log(`জয়বার্তা (Joybarta) সার্ভার পোর্ট ${PORT}-এ সফলভাবে চালু হয়েছে।`);
     // Run automated news harvest right after start
     initAutomatedNews();
   });

@@ -1,6 +1,6 @@
 {
   "name": "Vulture Eyes (ভালচার আইস)",
-  "description": "Vulture Eyes (ভালচার আইস) - দুর্নীতি দমন কমিশনের সাপোর্টিভ অনুসন্ধানী অনলাইন দৈনিক। সম্পাদক: Tarek Anwar Khan | প্রকাশক: দেবাশীষ ঘোষ মিশু | UK Co Reg: 17041560",
+  "description": "জয়বার্তা (Joybarta) - সত্যের সন্ধানে প্রতিদিন। অফিসিয়াল ফেসবুক পেজ থেকে সরাসরি প্রকাশিত জাতীয় ও অনুসন্ধানী অনলাইন দৈনিক।",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

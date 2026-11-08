@@ -1,4 +1,4 @@
-export type Category = 'rights' | 'deprived' | 'success' | 'legal';
+export type Category = 'national' | 'investigation' | 'rights' | 'politics' | 'fb_exclusive' | 'success' | 'legal' | string;
 
 export interface Comment {
   id: string;
@@ -17,12 +17,17 @@ export interface NewsItem {
   category: Category;
   categoryLabel: string;
   image?: string;
+  videoUrl?: string;
   likes: number;
   shares: number;
-  comments: Comment[];
+  comments?: Comment[];
   isBreaking?: boolean;
   isAIExpanded?: boolean;
   quote?: string;
+  fbPostUrl?: string;
+  fbPostId?: string;
+  isFbPost?: boolean;
+  fbReactions?: { like: number; love: number; wow: number; share: number };
 }
 
 export interface LegalMessage {

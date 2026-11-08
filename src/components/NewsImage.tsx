@@ -1,80 +1,68 @@
 import React, { useState } from 'react';
-import { Newspaper, Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 
 interface NewsImageProps {
   src?: string;
   alt: string;
   className?: string;
-  aspectRatio?: 'video' | 'wide' | 'square' | 'auto';
+  aspectRatio?: 'video' | 'wide' | 'square' | 'portrait' | 'auto';
+  objectFit?: 'cover' | 'contain' | 'auto';
+  maxHeight?: string;
 }
 
 export default function NewsImage({
   src,
   alt,
   className = '',
-  aspectRatio = 'video'
+  aspectRatio = 'auto',
+  objectFit = 'contain',
+  maxHeight = 'max-h-[520px]'
 }: NewsImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
+  // Authentic newspaper photo renderer: returns null if no valid image is provided,
+  // ensuring strict adherence to "no artificial or fake stock placeholder images" rule.
+  if (!src || src.trim() === '' || error) {
+    return null;
+  }
+
+  // Portrait photos (like historical figures and leaders) must never be cropped
+  const isPortraitPhoto = src.includes('feee930b') || aspectRatio === 'portrait';
+
   const aspectClass =
-    aspectRatio === 'video'
+    aspectRatio === 'video' && !isPortraitPhoto
       ? 'aspect-video'
-      : aspectRatio === 'wide'
+      : aspectRatio === 'wide' && !isPortraitPhoto
       ? 'aspect-[21/9]'
       : aspectRatio === 'square'
       ? 'aspect-square'
-      : '';
+      : aspectRatio === 'portrait'
+      ? 'aspect-[3/4]'
+      : 'aspect-auto';
 
-  // Fallback if no src provided or image fails to load
-  if (!src || error) {
-    return (
-      <div
-        className={`w-full ${aspectClass} bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-400 p-4 select-none relative overflow-hidden group ${className}`}
-      >
-        {/* Subtle grid pattern background */}
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:12px_12px]" />
-        
-        <div className="relative z-10 flex flex-col items-center text-center space-y-1.5">
-          <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
-            <Newspaper className="w-5 h-5 text-red-600" />
-          </div>
-          <span className="text-[11px] font-bold text-slate-600 line-clamp-1 max-w-[90%]">
-            {alt || 'Vulture Eyes সংবাদ চিত্র'}
-          </span>
-          <span className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">
-            VULTURE EYES DESK
-          </span>
-        </div>
-      </div>
-    );
-  }
+  const fitClass = (objectFit === 'contain' || isPortraitPhoto) ? 'object-contain' : 'object-cover';
 
   return (
     <div
-      className={`relative w-full ${aspectClass} overflow-hidden bg-slate-200 border border-slate-200/80 ${className}`}
+      className={`relative w-full ${aspectClass} overflow-hidden bg-slate-900/5 border border-slate-200/90 flex items-center justify-center ${className}`}
     >
-      {/* Skeleton / Blur-up placeholder while loading */}
+      {/* Subtle loader while fetching actual image */}
       {!loaded && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse">
-          <ImageIcon className="w-6 h-6 text-slate-400 opacity-60 animate-bounce" />
-          <span className="text-[9.5px] font-mono text-slate-400 mt-1 font-bold">
-            ছবি লোড হচ্ছে...
-          </span>
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-100 animate-pulse">
+          <ImageIcon className="w-5 h-5 text-slate-300" />
         </div>
       )}
 
-      {/* Actual image with smooth fade-in and scale-in */}
+      {/* Authentic news photograph - Full uncropped resolution */}
       <img
         src={src}
         alt={alt}
         loading="lazy"
         onLoad={() => setLoaded(true)}
         onError={() => setError(true)}
-        className={`w-full h-full object-cover transition-all duration-500 ease-out ${
-          loaded
-            ? 'opacity-100 scale-100 blur-0'
-            : 'opacity-0 scale-105 blur-md'
+        className={`${maxHeight} w-auto max-w-full ${fitClass} transition-opacity duration-300 ${
+          loaded ? 'opacity-100' : 'opacity-0'
         }`}
       />
     </div>

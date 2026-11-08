@@ -3,31 +3,36 @@ import {
   ThumbsUp, 
   Share2, 
   MessageSquare, 
-  Send, 
   Calendar, 
   Quote, 
   AlertCircle,
-  ShieldAlert,
-  Flame,
-  FileText
+  PlusCircle,
+  X,
+  CheckCircle,
+  BookOpen,
+  ChevronRight,
+  User,
+  Smartphone,
+  Download,
+  Video,
+  Volume2
 } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext.tsx';
 import Header from './components/Header.tsx';
 import BreakingTicker from './components/BreakingTicker.tsx';
 import LeadNews from './components/LeadNews.tsx';
-import EPaperSection from './components/EPaperSection.tsx';
-import LegalConsultant from './components/LegalConsultant.tsx';
-import SocialMediaFeed from './components/SocialMediaFeed.tsx';
 import AdminPanel from './components/AdminPanel.tsx';
 import InvestigationLogo from './components/InvestigationLogo.tsx';
 import NewsImage from './components/NewsImage.tsx';
+import ArticleReaderModal from './components/ArticleReaderModal.tsx';
+import AndroidInstallModal from './components/AndroidInstallModal.tsx';
 import { NewsItem } from './types.ts';
-import { LEAD_INVESTIGATIVE_ARTICLE } from './data/leadInvestigativeArticle.ts';
+import { JOYBARTA_SEED_POSTS } from './data/joybartaFacebookPosts.ts';
 
 export default function App() {
   const { user } = useAuth();
   
-  // Navigation & Filtering States
+  // Navigation & Category States
   const [activeCategory, setActiveCategory] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
@@ -39,6 +44,34 @@ export default function App() {
     return 'all';
   });
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Reader Modal State
+  const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
+  const [autoPlayAudio, setAutoPlayAudio] = useState(false);
+
+  // Android Standalone APK / PWA Modal State
+  const [showAndroidModal, setShowAndroidModal] = useState(false);
+
+  // Quick Post / News Publishing Modal State
+  const [showPublishForm, setShowPublishForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Form Fields (Journalist Joynal Bhai & Standard Publishing)
+  const [postTitle, setPostTitle] = useState('');
+  const [postCategory, setPostCategory] = useState('national');
+  const [postAuthor, setPostAuthor] = useState('জয়নাল আবেদীন');
+  const [postDate, setPostDate] = useState('০৫ নভেম্বর, ২০২৬');
+  const [postExcerpt, setPostExcerpt] = useState('');
+  const [postBody, setPostBody] = useState('');
+  const [postImage, setPostImage] = useState('');
+  const [postVideo, setPostVideo] = useState('');
+  const [postQuote, setPostQuote] = useState('');
+
+  // News Data States
+  const [newsList, setNewsList] = useState<NewsItem[]>([]);
+  const [loadingNews, setLoadingNews] = useState<boolean>(true);
+  const [newsError, setNewsError] = useState<string | null>(null);
 
   // Handle URL change or history back/forward for /admin
   useEffect(() => {
@@ -57,8 +90,11 @@ export default function App() {
     };
   }, []);
 
-  // Update URL hash when category changes to /admin
   const handleCategorySelect = (cat: string) => {
+    if (cat === 'create_post') {
+      setShowPublishForm(true);
+      return;
+    }
     setActiveCategory(cat);
     if (cat === 'admin') {
       window.history.pushState(null, '', '/admin');
@@ -66,27 +102,17 @@ export default function App() {
       window.history.pushState(null, '', '/');
     }
   };
-  
-  // News Data States
-  const [newsList, setNewsList] = useState<NewsItem[]>([]);
-  const [loadingNews, setLoadingNews] = useState<boolean>(true);
-  const [newsError, setNewsError] = useState<string | null>(null);
 
-  // Dynamic input states per article ID
-  const [commentAuthors, setCommentAuthors] = useState<{[key: string]: string}>({});
-  const [commentTexts, setCommentTexts] = useState<{[key: string]: string}>({});
-  const [expandedComments, setExpandedComments] = useState<{[key: string]: boolean}>({});
+  // Convert English digits to Bengali digits
+  const toBengaliNumber = (num: number | string): string => {
+    const banglaDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return num.toString().split("").map(char => {
+      const idx = parseInt(char);
+      return !isNaN(idx) ? banglaDigits[idx] : char;
+    }).join("");
+  };
 
-  // Automation status tracker for administrative panel
-  const [aggregatorStatus, setAggregatorStatus] = useState({
-    lastRun: "০৭ অক্টোবর, ২০২৬",
-    success: true,
-    addedCount: 20,
-    log: ["স্বয়ংক্রিয় আরএসএস ও অনুসন্ধানী সিন্ডিকেশন ইঞ্জিন প্রস্তুত।"],
-    isProcessing: false
-  });
-
-  // Fetch news from the Express API
+  // Fetch news from API
   const fetchNews = async () => {
     setLoadingNews(true);
     setNewsError(null);
@@ -94,53 +120,88 @@ export default function App() {
       const res = await fetch('/api/news');
       if (res.ok) {
         const data = await res.json();
-        setNewsList(data);
+        if (Array.isArray(data)) {
+          setNewsList(data);
+        } else {
+          setNewsList([]);
+        }
       } else {
-        throw new Error('Failed to load articles from database.');
+        throw new Error('সংবাদ লোড করতে সমস্যা হয়েছে।');
       }
     } catch (err: any) {
-      console.warn("API unavailable or failed, using local fallback:", err);
-      setNewsList([LEAD_INVESTIGATIVE_ARTICLE]);
+      console.warn("API fallback to Joybarta posts:", err);
+      setNewsList([...JOYBARTA_SEED_POSTS]);
     } finally {
       setLoadingNews(false);
     }
   };
 
-  // Fetch News Aggregation tracker status
-  const fetchAggregatorStatus = async () => {
-    try {
-      const res = await fetch('/api/admin/aggregation-status');
-      if (res.ok) {
-        const data = await res.json();
-        setAggregatorStatus(data);
-      }
-    } catch (err) {
-      console.error("Error fetching aggregator status:", err);
-    }
-  };
-
   useEffect(() => {
     fetchNews();
-    fetchAggregatorStatus();
   }, []);
 
-  // Trigger News Aggregator from Admin Action
-  const triggerAggregation = async () => {
-    setAggregatorStatus(prev => ({ ...prev, isProcessing: true }));
+  // Handle News Publishing
+  const handlePublishSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!postTitle.trim() || !postBody.trim()) {
+      alert('সংবাদের শিরোনাম ও বিস্তারিত বিবরণ প্রদান আবশ্যক।');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitSuccess(false);
+
+    const categoriesMap: {[k: string]: string} = {
+      national: 'জাতীয় সংবাদ',
+      investigation: 'বিশেষ অনুসন্ধান',
+      rights: 'জনস্বার্থ ও নাগরিক অধিকার',
+      economy: 'অর্থনীতি ও কৃষি',
+      environment: 'পরিবেশ ও জলবায়ু',
+      opinion: 'মতামত ও সম্পাদকীয়'
+    };
+
+    const payload = {
+      title: postTitle.trim(),
+      excerpt: postExcerpt.trim() || (postBody.slice(0, 140) + '...'),
+      body: postBody.trim(),
+      category: postCategory,
+      categoryLabel: categoriesMap[postCategory] || 'জাতীয় সংবাদ',
+      author: postAuthor.trim() || 'জয়নাল আবেদীন',
+      date: postDate.trim() || '০৫ নভেম্বর, ২০২৬',
+      image: postImage.trim() || '', // If empty, clean text-only layout without any fake image
+      videoUrl: postVideo.trim() || undefined,
+      quote: postQuote.trim() || undefined
+    };
+
     try {
-      const res = await fetch('/api/admin/trigger-aggregation', { method: 'POST' });
+      const res = await fetch('/api/news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
       if (res.ok) {
-        const data = await res.json();
-        setAggregatorStatus(data);
+        setSubmitSuccess(true);
+        setPostTitle('');
+        setPostExcerpt('');
+        setPostBody('');
+        setPostImage('');
+        setPostVideo('');
+        setPostQuote('');
         await fetchNews();
+        setTimeout(() => {
+          setShowPublishForm(false);
+          setSubmitSuccess(false);
+          setActiveCategory('all');
+        }, 1000);
+      } else {
+        const err = await res.json();
+        alert(`পাবলিশ ত্রুটি: ${err.error || 'ব্যর্থ হয়েছে'}`);
       }
     } catch (err: any) {
-      console.error("Error triggering news aggregation:", err);
-      setAggregatorStatus(prev => ({
-        ...prev,
-        isProcessing: false,
-        log: [...prev.log, `ত্রুটি: ${err.message || err}`]
-      }));
+      alert(`সার্ভার ত্রুটি: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -151,6 +212,9 @@ export default function App() {
       if (res.ok) {
         const updatedItem = await res.json();
         setNewsList(prev => prev.map(item => item.id === id ? updatedItem : item));
+        if (selectedArticle && selectedArticle.id === id) {
+          setSelectedArticle(updatedItem);
+        }
       }
     } catch (err) {
       console.error("Error liking article:", err);
@@ -158,140 +222,169 @@ export default function App() {
   };
 
   // Share handler
-  const handleShare = async (id: string, url?: string) => {
+  const handleShare = async (id: string) => {
     try {
       const res = await fetch(`/api/news/${id}/share`, { method: 'POST' });
       if (res.ok) {
         const updatedItem = await res.json();
         setNewsList(prev => prev.map(item => item.id === id ? updatedItem : item));
-        navigator.clipboard?.writeText?.(url || window.location.href);
-        alert('সংবাদের লিংকটি ক্লিপবোর্ডে কপি করা হয়েছে!');
+        if (selectedArticle && selectedArticle.id === id) {
+          setSelectedArticle(updatedItem);
+        }
+        navigator.clipboard?.writeText?.(window.location.origin + `?news=${id}`);
+        alert('সংবাদের লিংকটি কপি করা হয়েছে!');
       }
     } catch (err) {
       console.error("Error sharing article:", err);
     }
   };
 
-  // Comment insertion handler
-  const handleCommentSubmit = async (e: React.FormEvent, id: string) => {
-    e.preventDefault();
-    const author = commentAuthors[id]?.trim() || user?.displayName || user?.email?.split('@')[0] || 'নাগরিক পাঠক';
-    const text = commentTexts[id]?.trim() || '';
-    if (!text) return;
+  // Breaking & headline ticker items
+  const breakingNewsItems = newsList.length > 0 
+    ? (newsList.filter(item => item.isBreaking || item.categoryLabel?.includes('ব্রেকিং')).length > 0
+        ? newsList.filter(item => item.isBreaking || item.categoryLabel?.includes('ব্রেকিং'))
+        : newsList.slice(0, 6))
+    : [];
 
-    try {
-      const res = await fetch(`/api/news/${id}/comment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author, text })
-      });
-      if (res.ok) {
-        const updatedItem = await res.json();
-        setNewsList(prev => prev.map(item => item.id === id ? updatedItem : item));
-        setCommentAuthors(prev => ({ ...prev, [id]: '' }));
-        setCommentTexts(prev => ({ ...prev, [id]: '' }));
-      }
-    } catch (err) {
-      console.error("Error inserting comment:", err);
-    }
-  };
-
-  // Breaking news items
-  const breakingNewsItems = newsList.filter(item => item.isBreaking || item.categoryLabel?.includes('ব্রেকিং'));
-
-  // Filter local state list by category & search query
+  // Filter news list by category & search query
   const filteredNews = newsList.filter(item => {
     const matchesSearch = searchQuery.trim() === '' || 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.body.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      item.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.author?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (activeCategory === 'all') return matchesSearch;
-    if (activeCategory === 'breaking') return matchesSearch && (item.isBreaking || item.categoryLabel?.includes('ব্রেকিং'));
-    if (activeCategory === 'investigative') return matchesSearch && (item.categoryLabel?.includes('অনুসন্ধান') || !item.isBreaking);
-    if (activeCategory === 'rights') return matchesSearch && item.category === 'rights';
+    if (activeCategory === 'investigation') return matchesSearch && (item.category === 'investigation' || item.categoryLabel?.includes('অনুসন্ধান'));
+    if (activeCategory === 'rights') return matchesSearch && (item.category === 'rights' || item.categoryLabel?.includes('অধিকার') || item.categoryLabel?.includes('স্বাস্থ্য'));
+    if (activeCategory === 'economy') return matchesSearch && (item.category === 'economy' || item.categoryLabel?.includes('অর্থনীতি') || item.categoryLabel?.includes('কৃষি'));
+    if (activeCategory === 'environment') return matchesSearch && (item.category === 'environment' || item.categoryLabel?.includes('পরিবেশ'));
 
     return matchesSearch && item.category === activeCategory;
   });
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 font-sans">
-      {/* Top Navigation & Brand Section */}
+    <div className="min-h-screen bg-slate-100 text-slate-900 font-sans selection:bg-[#0f3d2e] selection:text-white">
+      {/* Top Header & Brand Masthead */}
       <Header 
         activeCategory={activeCategory} 
         setActiveCategory={handleCategorySelect} 
         onSearch={(query) => setSearchQuery(query)} 
+        onOpenAndroidInstall={() => setShowAndroidModal(true)}
       />
 
-      {/* Breaking News Ticker with Dynamic Live Headlines */}
+      {/* Breaking News Ticker */}
       <BreakingTicker 
         breakingNewsList={breakingNewsItems} 
         onSelectArticle={(text) => setSearchQuery(text)} 
       />
 
-      {/* Main Newspaper Layout Body */}
+      {/* Main Newspaper Layout */}
       <main className="max-w-7xl mx-auto px-4 py-6" id="main-content">
         
-        {activeCategory === 'legal' ? (
-          <LegalConsultant />
-        ) : activeCategory === 'social' ? (
-          <SocialMediaFeed />
-        ) : activeCategory === 'admin' ? (
+        {activeCategory === 'admin' ? (
           <AdminPanel 
             newsList={newsList}
             onRefreshNews={fetchNews}
-            aggregatorStatus={aggregatorStatus}
-            onTriggerAggregation={triggerAggregation}
+            aggregatorStatus={{
+              lastRun: "০৫ নভেম্বর, ২০২৬",
+              success: true,
+              addedCount: newsList.length,
+              log: ["সাংবাদিক জয়নাল ভাইয়ের সম্পাদকীয় ডেস্ক সচল ও প্রস্তুত।"],
+              isProcessing: false
+            }}
+            onTriggerAggregation={async () => { await fetchNews(); }}
           />
         ) : (
-          /* Newspaper Stories Section */
           <div className="space-y-6">
             
-            {/* Featured Lead investigative news only when on homepage 'all' and no search filter */}
-            {activeCategory === 'all' && !searchQuery && (
+            {/* Editorial Statement / Slogan Masthead */}
+            <div className="bg-[#0f3d2e] border-l-4 border-red-600 text-white p-4 sm:p-5 rounded-xs shadow-xs flex flex-wrap justify-between items-center gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 bg-white rounded p-0.5 shrink-0 flex items-center justify-center shadow-xs">
+                  <img src="/joybarta-logo.jpg" alt="জয়বার্তা" className="w-full h-full object-contain" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-serif text-lg md:text-xl font-black text-white">
+                      জয়বার্তা
+                    </span>
+                    <span className="text-[10px] bg-red-600 text-white font-bold px-2 py-0.5 rounded-xs uppercase tracking-wide">
+                      জাতীয় অনলাইন দৈনিক
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-100 mt-0.5 max-w-2xl leading-relaxed">
+                    "সত্যের সন্ধানে প্রতিদিন" — সম্পাদক ও প্রকাশক: জয়নাল আবেদীন। বস্তুনিষ্ঠ সাংবাদিকতায় জনগণের বিশ্বস্ত কণ্ঠস্বর।
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => setShowPublishForm(true)}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 rounded-xs inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-emerald-400"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>নতুন সংবাদ প্রকাশ</span>
+                </button>
+
+                <button
+                  onClick={() => setShowAndroidModal(true)}
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3.5 py-2 rounded-xs inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer border border-red-400"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  <span>Android অ্যাপ</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Featured Lead Story (Only on 'all' / Home and without active search query) */}
+            {activeCategory === 'all' && !searchQuery && newsList.length > 0 && (
               <LeadNews 
                 newsList={newsList}
                 onLike={handleLike}
                 onShare={handleShare}
-                onRefresh={fetchNews}
+                onSelectArticle={(article) => {
+                  setAutoPlayAudio(false);
+                  setSelectedArticle(article);
+                }}
+                onListenArticle={(article) => {
+                  setAutoPlayAudio(true);
+                  setSelectedArticle(article);
+                }}
               />
             )}
 
-            {/* E-Paper reader section beautifully integrated on front page */}
-            {activeCategory === 'all' && !searchQuery && (
-              <div className="my-6">
-                <EPaperSection />
-              </div>
-            )}
-
-            {/* General News Grid Header & Filter */}
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between border-b-2 border-slate-950 pb-2 mb-4 gap-2">
-                <h2 className="text-sm md:text-base font-black text-slate-950 uppercase tracking-wide flex items-center gap-2">
+            {/* Serial-by-Serial News Stream Section */}
+            <section className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between border-b-2 border-[#0f3d2e] pb-2 mb-4 gap-2">
+                <h2 className="text-sm md:text-base font-black text-[#0f3d2e] uppercase tracking-wide flex items-center gap-2 font-serif">
                   <span className="w-3 h-3 bg-red-600 inline-block"></span>
-                  {activeCategory === 'all' ? 'সর্বশেষ সংগৃহীত সংবাদ ও অনুসন্ধানী প্রতিবেদন' : 
-                   activeCategory === 'investigative' ? '৫টি বিশেষ অনুসন্ধানী প্রতিবেদন' : 
-                   activeCategory === 'breaking' ? '১৫টি তাজা ব্রেকিং নিউজ (লাইভ আরএসএস ফিড)' : 
-                   'জাতীয় ও জনস্বার্থ বার্তা'}
+                  {activeCategory === 'all' ? 'ধারাবাহিক সকল প্রকাশিত সংবাদ' : 
+                   activeCategory === 'investigation' ? 'বিশেষ অনুসন্ধানী প্রতিবেদন' :
+                   activeCategory === 'rights' ? 'জনস্বার্থ ও নাগরিক অধিকার' : 
+                   activeCategory === 'economy' ? 'অর্থনীতি ও কৃষি সংবাদ' :
+                   activeCategory === 'environment' ? 'পরিবেশ ও জলবায়ু' :
+                   'জয়বার্তা সংবাদ'}
                 </h2>
                 
                 <div className="flex items-center gap-2">
                   {searchQuery && (
-                    <span className="text-xs text-slate-700 font-bold bg-white border border-slate-300 px-2 py-0.5">
+                    <span className="text-xs text-slate-700 font-bold bg-white border border-slate-300 px-2 py-0.5 rounded-xs">
                       অনুসন্ধান: "{searchQuery}"
                       <button onClick={() => setSearchQuery('')} className="ml-1 text-red-600 font-black cursor-pointer">×</button>
                     </span>
                   )}
-                  <span className="text-[11px] font-mono text-slate-600 font-bold bg-slate-200 px-2 py-0.5">
-                    মোট: {filteredNews.length} টি সংবাদ
+                  <span className="text-[11px] font-mono text-emerald-900 font-bold bg-emerald-100/70 border border-emerald-200 px-2.5 py-0.5 rounded-xs">
+                    মোট: {toBengaliNumber(filteredNews.length)} টি সংবাদ
                   </span>
                 </div>
               </div>
 
               {loadingNews ? (
                 <div className="text-center py-12 space-y-2 bg-white border border-slate-200">
-                  <div className="w-8 h-8 border-4 border-slate-900 border-t-red-600 rounded-full animate-spin mx-auto"></div>
-                  <p className="text-xs text-slate-600 font-bold">সংবাদ ডাটাবেজ থেকে লোড হচ্ছে...</p>
+                  <div className="w-8 h-8 border-4 border-[#0f3d2e] border-t-red-600 rounded-full animate-spin mx-auto"></div>
+                  <p className="text-xs text-slate-600 font-bold">সংবাদ লোড হচ্ছে...</p>
                 </div>
               ) : newsError ? (
                 <div className="bg-red-50 border border-red-200 text-red-800 p-4 text-center space-y-2 max-w-md mx-auto">
@@ -299,276 +392,454 @@ export default function App() {
                   <p className="text-xs font-bold text-red-950">{newsError}</p>
                   <button 
                     onClick={fetchNews}
-                    className="bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs px-3.5 py-1.5 transition-all cursor-pointer"
+                    className="bg-[#0f3d2e] hover:bg-[#16503c] text-white font-bold text-xs px-3.5 py-1.5 transition-all cursor-pointer rounded-xs"
                   >
                     পুনরায় চেষ্টা করুন
                   </button>
                 </div>
               ) : filteredNews.length === 0 ? (
-                <div className="bg-white border border-slate-200 p-8 text-center space-y-2">
-                  <p className="text-xs font-bold text-slate-900">কোনো সংবাদ পাওয়া যায়নি।</p>
-                  <p className="text-[11px] text-slate-500">অনুগ্রহ করে অন্য কোনো কি-ওয়ার্ড দিয়ে অনুসন্ধান করুন।</p>
+                /* Ready State Dedicated to Journalist Joynal Bhai */
+                <div className="bg-white border border-slate-200 p-8 text-center space-y-4 rounded-xs shadow-2xs max-w-xl mx-auto my-6">
+                  <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto text-[#0f3d2e]">
+                    <Smartphone className="w-8 h-8 text-emerald-700" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h3 className="text-base font-black text-slate-900 font-serif">
+                      সাংবাদিক জয়নাল ভাইয়ের কন্ট্রোল ড্যাশবোর্ড প্রস্তুত
+                    </h3>
+                    <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                      কোনো কাল্পনিক সংবাদ রাখা হয়নি। জয়নাল ভাইয়ের পেজের যেকোনো বাস্তব পোস্ট, ছবি বা ভিডিও হুবহু এখানে প্রকাশ করতে নিচের বাটনে ক্লিক করুন অথবা অ্যান্ড্রয়েড ফোনে স্ট্যান্ডঅ্যালন অ্যাপটি ইনস্টল করে নিন।
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-3 pt-2">
+                    <button
+                      onClick={() => setShowPublishForm(true)}
+                      className="bg-[#0f3d2e] hover:bg-[#16503c] text-white font-bold text-xs px-4 py-2.5 rounded-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>সংবাদ প্রকাশ করুন</span>
+                    </button>
+                    <button
+                      onClick={() => setShowAndroidModal(true)}
+                      className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-4 py-2.5 rounded-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs border border-red-400"
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      <span>Android অ্যাপ ইনস্টল করুন</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
+                /* Authentic Newspaper Articles Grid */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredNews.map((item) => (
+                  {filteredNews.map((item, index) => (
                     <article 
                       key={item.id} 
-                      className="bg-white border border-slate-200 hover:border-slate-800 transition-all duration-200 flex flex-col justify-between p-4 shadow-2xs"
+                      className="bg-white border border-slate-200 hover:border-[#0f3d2e] transition-all duration-200 flex flex-col justify-between p-4 shadow-2xs rounded-xs group"
                       id={`news-card-${item.id}`}
                     >
                       <div>
-                        {/* News Category Badge & Time */}
+                        {/* Kicker / Serial Number & Dateline */}
                         <div className="flex justify-between items-center mb-2.5">
-                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 tracking-wide ${
-                            item.isBreaking ? 'bg-red-600 text-white' :
-                            item.categoryLabel?.includes('অনুসন্ধান') ? 'bg-slate-950 text-white' :
-                            'bg-slate-800 text-white'
-                          }`}>
-                            {item.categoryLabel || 'সংবাদ'}
-                          </span>
-                          <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1 font-semibold">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 border border-slate-200 rounded-xs">
+                              সংবাদ #{toBengaliNumber(index + 1)}
+                            </span>
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 tracking-wide rounded-xs ${
+                              item.isBreaking ? 'bg-red-600 text-white' :
+                              item.categoryLabel?.includes('অনুসন্ধান') ? 'bg-[#0f3d2e] text-white' :
+                              'bg-slate-800 text-white'
+                            }`}>
+                              {item.categoryLabel || 'সংবাদ'}
+                            </span>
+                          </div>
+
+                          <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
                             <Calendar className="w-3 h-3 text-slate-400" />
                             {item.date}
                           </span>
                         </div>
 
-                        {/* News Card Featured Image with Skeleton / Blur-up */}
-                        <div className="mb-3 overflow-hidden border border-slate-200">
-                          <NewsImage 
-                            src={item.image} 
-                            alt={item.title} 
-                            aspectRatio="video" 
-                            className="w-full hover:scale-103 transition-transform duration-300"
-                          />
-                        </div>
+                        {/* Real Photo Only (If no image, this block is completely skipped - NO fake images) */}
+                        {item.image && item.image.trim() !== '' && (
+                          <div 
+                            className="mb-3 overflow-hidden border border-slate-300 bg-slate-100 rounded-xs flex items-center justify-center cursor-pointer p-1"
+                            onClick={() => {
+                              setAutoPlayAudio(false);
+                              setSelectedArticle(item);
+                            }}
+                          >
+                            <NewsImage 
+                              src={item.image} 
+                              alt={item.title} 
+                              aspectRatio="auto"
+                              objectFit="contain"
+                              maxHeight="max-h-[260px]"
+                              className="w-auto max-w-full hover:scale-102 transition-transform duration-300"
+                            />
+                          </div>
+                        )}
 
-                        {/* Title */}
-                        <h3 className="text-sm md:text-[15px] font-black text-slate-950 leading-snug font-serif hover:text-red-700 transition-colors cursor-pointer mb-2">
+                        {/* Video indicator if video is present */}
+                        {item.videoUrl && item.videoUrl.trim() !== '' && (
+                          <div 
+                            className="mb-2 bg-slate-900 text-white text-[11px] p-2 flex items-center gap-1.5 rounded-xs cursor-pointer"
+                            onClick={() => setSelectedArticle(item)}
+                          >
+                            <Video className="w-3.5 h-3.5 text-red-500" />
+                            <span>ভিডিও সংযুক্ত রয়েছে (দেখতে ক্লিক করুন)</span>
+                          </div>
+                        )}
+
+                        {/* Headline */}
+                        <h3 
+                          onClick={() => setSelectedArticle(item)}
+                          className="text-base font-black text-slate-950 leading-snug font-serif hover:text-[#0f3d2e] transition-colors cursor-pointer mb-2"
+                        >
                           {item.title}
                         </h3>
 
-                        {/* Excerpt */}
-                        <p className="text-xs text-slate-700 text-justify leading-relaxed mb-3">
+                        {/* Reporter byline */}
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold mb-2">
+                          <User className="w-3 h-3 text-emerald-700" />
+                          <span>{item.author || 'জয়নাল আবেদীন'}</span>
+                        </div>
+
+                        {/* Excerpt / Lead */}
+                        <p className="text-xs text-slate-700 text-justify leading-relaxed mb-3 line-clamp-3">
                           {item.excerpt}
                         </p>
 
-                        {/* Highlighted Quote Callout block */}
+                        {/* Quote if present */}
                         {item.quote && (
-                          <div className="bg-slate-50 border-l-3 border-red-600 p-2.5 my-3 relative italic text-[11px] text-slate-800 leading-relaxed text-justify font-serif">
-                            <Quote className="w-4 h-4 text-red-300 absolute -top-1.5 -left-1 opacity-60" />
+                          <div className="bg-emerald-50/70 border-l-3 border-[#0f3d2e] p-2.5 my-2.5 relative italic text-[11px] text-slate-800 leading-relaxed text-justify font-serif">
+                            <Quote className="w-3.5 h-3.5 text-emerald-400 absolute -top-1 -left-1 opacity-70" />
                             <p className="font-semibold">"{item.quote}"</p>
                           </div>
                         )}
-
-                        {/* Collapsible details for full read */}
-                        <details className="group border-t border-slate-100 pt-2.5 mt-2.5">
-                          <summary className="text-[11px] font-black text-slate-900 hover:text-red-700 cursor-pointer flex items-center justify-between list-none">
-                            <span>পূর্ণাঙ্গ প্রতিবেদন পড়ুন</span>
-                            <span className="transition-transform group-open:rotate-180 text-xs font-mono">▼</span>
-                          </summary>
-                          <div className="text-[11px] md:text-xs text-slate-800 leading-relaxed text-justify space-y-2 mt-2 pt-2 border-t border-slate-50 font-sans whitespace-pre-line">
-                            {item.body}
-                            <div className="pt-2 text-[10px] text-slate-500 font-bold border-t border-slate-100 flex justify-between">
-                              <span>প্রতিবেদক: {item.author}</span>
-                              <span className="text-slate-600 font-mono">যাচাইকৃত ডেস্ক</span>
-                            </div>
-                          </div>
-                        </details>
                       </div>
 
-                      {/* Interactive Section */}
+                      {/* Footer Action Bar */}
                       <div className="mt-4 border-t border-slate-200 pt-2.5">
-                        {/* Engagement Statistics */}
                         <div className="flex justify-between items-center text-[10px] text-slate-500 pb-2 border-b border-slate-100 font-bold">
                           <span>{item.likes} জন সহমত</span>
-                          <div className="flex gap-2">
-                            <span>{item.comments?.length || 0} মতামত</span>
-                            <span>•</span>
-                            <span>{item.shares} শেয়ার</span>
-                          </div>
+                          <span>{item.comments?.length || 0} মতামত • {item.shares} শেয়ার</span>
                         </div>
 
-                        {/* Action buttons */}
-                        <div className="flex justify-between items-center pt-2 text-xs font-bold text-slate-700">
-                          <button 
-                            onClick={() => handleLike(item.id)}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
-                          >
-                            <ThumbsUp className="w-3.5 h-3.5 text-slate-600" /> সহমত
-                          </button>
-                          <button 
-                            onClick={() => setExpandedComments(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5 text-slate-600" /> মন্তব্য
-                          </button>
-                          <button 
-                            onClick={() => handleShare(item.id)}
-                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
-                          >
-                            <Share2 className="w-3.5 h-3.5 text-slate-600" /> শেয়ার
-                          </button>
-                        </div>
-
-                        {/* Comments container */}
-                        {expandedComments[item.id] && (
-                          <div className="mt-3 bg-slate-50 p-2.5 border border-slate-200 space-y-2.5">
-                            <h4 className="text-[10px] font-black text-slate-900 uppercase">জনপ্রতিক্রিয়া:</h4>
-                            
-                            <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                              {!item.comments || item.comments.length === 0 ? (
-                                <p className="text-[9.5px] text-slate-500 italic">প্রথম মন্তব্যটি আপনার হোক।</p>
-                              ) : (
-                                item.comments.map((c) => (
-                                  <div key={c.id} className="bg-white p-2 border border-slate-200 text-[10px] leading-relaxed">
-                                    <div className="flex justify-between items-center mb-0.5">
-                                      <span className="font-extrabold text-slate-900">{c.author}</span>
-                                      <span className="text-[8px] text-slate-400 font-mono">{c.date}</span>
-                                    </div>
-                                    <p className="text-slate-700 text-justify">{c.text}</p>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-
-                            {/* Comment creation form */}
-                            <form onSubmit={(e) => handleCommentSubmit(e, item.id)} className="space-y-1.5 pt-1.5 border-t border-slate-200">
-                              <input 
-                                type="text"
-                                placeholder="আপনার নাম..."
-                                value={commentAuthors[item.id] || ''}
-                                onChange={(e) => setCommentAuthors(prev => ({ ...prev, [item.id]: e.target.value }))}
-                                className="bg-white border border-slate-300 text-[10px] px-2 py-1 focus:outline-none w-full text-slate-800"
-                                required
-                              />
-                              <div className="relative">
-                                <input 
-                                  type="text"
-                                  placeholder="আপনার মতামত লিখুন..."
-                                  value={commentTexts[item.id] || ''}
-                                  onChange={(e) => setCommentTexts(prev => ({ ...prev, [item.id]: e.target.value }))}
-                                  className="w-full bg-white border border-slate-300 text-[10px] pl-2 pr-8 py-1 focus:outline-none text-slate-800"
-                                  required
-                                />
-                                <button type="submit" className="absolute right-1.5 top-1 text-slate-600 hover:text-slate-950 cursor-pointer">
-                                  <Send className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </form>
+                        <div className="flex justify-between items-center pt-2">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                setAutoPlayAudio(false);
+                                setSelectedArticle(item);
+                              }}
+                              className="bg-[#0f3d2e] hover:bg-[#16503c] text-white font-bold text-xs px-3 py-1.5 rounded-xs inline-flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                            >
+                              <BookOpen className="w-3.5 h-3.5 text-emerald-300" />
+                              <span>পূর্ণাঙ্গ সংবাদ</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setAutoPlayAudio(true);
+                                setSelectedArticle(item);
+                              }}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs px-2.5 py-1.5 rounded-xs inline-flex items-center gap-1 transition-colors cursor-pointer"
+                              title="সংবাদ পাঠিকার কণ্ঠে শুনুন"
+                            >
+                              <Volume2 className="w-3.5 h-3.5 text-rose-600" />
+                              <span>শুনুন</span>
+                            </button>
                           </div>
-                        )}
+
+                          <div className="flex items-center gap-1 text-xs">
+                            <button 
+                              onClick={() => handleLike(item.id)}
+                              className="p-1.5 text-slate-600 hover:text-[#0f3d2e] hover:bg-slate-100 rounded-xs transition-colors cursor-pointer"
+                              title="সহমত"
+                            >
+                              <ThumbsUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => handleShare(item.id)}
+                              className="p-1.5 text-slate-600 hover:text-[#0f3d2e] hover:bg-slate-100 rounded-xs transition-colors cursor-pointer"
+                              title="শেয়ার"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </article>
                   ))}
                 </div>
               )}
-            </div>
+            </section>
+
           </div>
         )}
+
       </main>
 
-      {/* Brand Footer Section - Clean GeneratePress Editorial Style */}
-      <footer className="bg-slate-950 text-slate-300 py-12 px-4 mt-16 border-t-4 border-red-600 font-sans">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
-          
-          {/* Column 1: Brand & Identity */}
-          <div className="space-y-3 md:col-span-1">
-            <InvestigationLogo variant="footer" />
-            <p className="text-xs text-slate-400 leading-relaxed text-justify mt-3 font-sans">
-              দুর্নীতির বিরুদ্ধে আপসহীন অনুসন্ধানী সাংবাদিকতা। রাষ্ট্র ও জনগণের অধিকার প্রতিষ্ঠায় সর্বদা সোচ্চার ও নির্ভরযোগ্য তথ্যভাণ্ডার।
-            </p>
-            <div className="pt-2">
-              <span className="inline-block bg-slate-900 border border-slate-800 text-red-400 text-[10px] font-mono font-bold px-2.5 py-1">
-                VULTURE EYES INVESTIGATIVE DESK
-              </span>
-            </div>
-          </div>
-          
-          {/* Column 2: Editorial & Publisher Panel */}
-          <div className="space-y-3">
-            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1.5 text-red-500 font-serif">
-              সম্পাদকীয় ও প্রকাশনা প্যানেল
-            </h4>
-            <div className="text-xs leading-relaxed text-slate-300 space-y-2">
-              <div>
-                <span className="text-[10px] text-slate-400 block uppercase font-mono">সম্পাদক (Editor):</span>
-                <p className="text-white font-extrabold text-[13px]">Tarek Anwar Khan</p>
-              </div>
-              <div className="pt-1">
-                <span className="text-[10px] text-slate-400 block uppercase font-mono">প্রকাশক (Publisher):</span>
-                <p className="text-white font-extrabold text-[13px]">দেবাশীষ ঘোষ মিশু</p>
-              </div>
-              <div className="pt-1 text-[11px] text-slate-400">
-                <p>বার্তা ও সম্পাদকীয় বিভাগ: <span className="font-mono text-slate-300">desk@vultureeyes.com</span></p>
-                <p>হেড অফিস: লন্ডন ও ঢাকা</p>
-              </div>
-            </div>
-          </div>
+      {/* Full Article Reader Modal */}
+      {selectedArticle && (
+        <ArticleReaderModal 
+          article={selectedArticle}
+          onClose={() => {
+            setSelectedArticle(null);
+            setAutoPlayAudio(false);
+          }}
+          onLike={handleLike}
+          onShare={handleShare}
+          onArticleSelect={(art) => {
+            setAutoPlayAudio(false);
+            setSelectedArticle(art);
+          }}
+          relatedArticles={newsList.filter(n => n.id !== selectedArticle.id)}
+          autoPlayAudio={autoPlayAudio}
+        />
+      )}
 
-          {/* Column 3: UK Company Registration & Licensing */}
-          <div className="space-y-3">
-            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1.5 text-red-500 font-serif">
-              ইউকে কোম্পানি লাইসেন্স ও নিবন্ধন
-            </h4>
-            <div className="text-xs leading-relaxed text-slate-300 space-y-2">
-              <div className="bg-slate-900 border border-slate-800 p-3 space-y-1.5">
-                <p className="font-bold text-white text-[11.5px] leading-snug">
-                  Operated under UK Company Registration No: <span className="text-amber-400 font-mono font-extrabold">17041560</span>
-                </p>
-                <p className="text-[10.5px] text-slate-400 font-mono">
-                  (Registered in England & Wales)
-                </p>
-                <div className="pt-1.5 border-t border-slate-800">
-                  <a 
-                    href="https://find-and-update.company-information.service.gov.uk/company/17041560" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white font-black text-[10.5px] px-3 py-1.5 transition-colors shadow-2xs"
+      {/* Android Standalone APK / PWA Modal */}
+      <AndroidInstallModal 
+        isOpen={showAndroidModal} 
+        onClose={() => setShowAndroidModal(false)} 
+      />
+
+      {/* Quick News Publishing Modal */}
+      {showPublishForm && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPublishForm(false);
+          }}
+        >
+          <div className="bg-white text-slate-900 w-full max-w-2xl rounded-xs shadow-2xl border border-slate-300 p-6 space-y-4 my-6 font-sans">
+            
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-[#0f3d2e]" />
+                <h3 className="text-base font-black text-slate-950 font-serif">
+                  সংবাদ প্রকাশ করুন (সাংবাদিক জয়নাল ভাই ডেস্ক)
+                </h3>
+              </div>
+              <button 
+                onClick={() => setShowPublishForm(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {submitSuccess && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-3 text-xs font-bold flex items-center gap-2 rounded-xs">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <span>সংবাদটি সফলভাবে জয়বার্তা পোর্টালে প্রকাশিত হয়েছে!</span>
+              </div>
+            )}
+
+            <form onSubmit={handlePublishSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">
+                  সংবাদের শিরোনাম (Headline) <span className="text-red-600">*</span>:
+                </label>
+                <input
+                  type="text"
+                  value={postTitle}
+                  onChange={(e) => setPostTitle(e.target.value)}
+                  placeholder="পোস্টের মূল শিরোনাম লিখুন..."
+                  className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] font-bold font-serif text-slate-900 rounded-xs"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">বিভাগ / ক্যাটাগরি:</label>
+                  <select
+                    value={postCategory}
+                    onChange={(e) => setPostCategory(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs"
                   >
-                    <span>সরকারি ডাটাবেজে লাইসেন্স যাচাই</span>
-                    <span className="font-mono text-xs">↗</span>
-                  </a>
+                    <option value="national">জাতীয় সংবাদ</option>
+                    <option value="investigation">বিশেষ অনুসন্ধান</option>
+                    <option value="rights">জনস্বার্থ ও নাগরিক অধিকার</option>
+                    <option value="economy">অর্থনীতি ও কৃষি</option>
+                    <option value="environment">পরিবেশ ও জলবায়ু</option>
+                    <option value="opinion">মতামত ও সম্পাদকীয়</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">প্রতিবেদক:</label>
+                  <input
+                    type="text"
+                    value={postAuthor}
+                    onChange={(e) => setPostAuthor(e.target.value)}
+                    placeholder="জয়নাল আবেদীন"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs font-bold text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">তারিখ ও স্থান:</label>
+                  <input
+                    type="text"
+                    value={postDate}
+                    onChange={(e) => setPostDate(e.target.value)}
+                    placeholder="০৫ নভেম্বর, ২০২৬"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs"
+                  />
                 </div>
               </div>
-              <p className="text-[10px] text-slate-400">
-                UK Companies House-এর অফিশিয়াল ডেজিগনেশনে পরিচালিত।
-              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">
+                    আসল ছবির লিংক (ঐচ্ছিক):
+                  </label>
+                  <input
+                    type="text"
+                    value={postImage}
+                    onChange={(e) => setPostImage(e.target.value)}
+                    placeholder="ফেসবুক ছবির URL (ছবি না থাকলে খালি রাখুন)"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs font-mono"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-0.5 block italic">
+                    * ছবি না থাকলে খালি রাখুন; কোনো কৃত্রিম ছবি আসবে না।
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">
+                    ভিডিও লিংক (ঐচ্ছিক):
+                  </label>
+                  <input
+                    type="text"
+                    value={postVideo}
+                    onChange={(e) => setPostVideo(e.target.value)}
+                    placeholder="ফেসবুক ভিডিও বা ইউটিউব ভিডিও URL"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">
+                  সংক্ষিপ্ত সারাংশ (Lead / Excerpt):
+                </label>
+                <textarea
+                  value={postExcerpt}
+                  onChange={(e) => setPostExcerpt(e.target.value)}
+                  placeholder="সংবাদের সূচনা বা সারসংক্ষেপ (ঐচ্ছিক)..."
+                  rows={2}
+                  className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">
+                  মূল লেখার সম্পূর্ণ বিবরণ <span className="text-red-600">*</span>:
+                </label>
+                <textarea
+                  value={postBody}
+                  onChange={(e) => setPostBody(e.target.value)}
+                  placeholder="ফেসবুক পোস্টের মূল লেখাটি হুবহু এখানে পেস্ট করুন (একটি শব্দও পরিবর্তন হবে না)..."
+                  rows={6}
+                  className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs leading-relaxed"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">
+                  উদ্ধৃতি বা বিশেষ বক্তব্য (ঐচ্ছিক):
+                </label>
+                <input
+                  type="text"
+                  value={postQuote}
+                  onChange={(e) => setPostQuote(e.target.value)}
+                  placeholder="যেমন: সত্যের সন্ধানে প্রতিদিন — জয়নাল আবেদীন।"
+                  className="w-full bg-slate-50 border border-slate-300 px-3 py-2 text-xs focus:outline-none focus:border-[#0f3d2e] rounded-xs italic"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPublishForm(false)}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xs cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-[#0f3d2e] hover:bg-[#16503c] text-white font-bold px-6 py-2 rounded-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>{isSubmitting ? 'প্রকাশিত হচ্ছে...' : 'হুবহু প্রকাশ করুন'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Brand Newspaper Footer */}
+      <footer className="bg-[#081f17] text-slate-300 py-10 px-4 mt-16 border-t-4 border-red-600 font-sans">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+          
+          {/* Column 1: Joybarta Brand & Motto */}
+          <div className="space-y-3">
+            <InvestigationLogo variant="footer" />
+            <p className="text-xs text-slate-300 leading-relaxed text-justify mt-2 font-sans">
+              "সত্যের সন্ধানে প্রতিদিন" — সত্য, ন্যায় ও বস্তুনিষ্ঠ সাংবাদিকতার প্রত্যয় নিয়ে প্রকাশিত জাতীয় অনলাইন দৈনিক সংবাদপত্র।
+            </p>
+          </div>
+
+          {/* Column 2: Editorial & Publication Identity */}
+          <div className="space-y-2.5">
+            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-emerald-900 pb-1.5 text-emerald-400 font-serif">
+              সম্পাদকীয় ও পরিচালনা
+            </h4>
+            <div className="text-xs text-slate-300 space-y-1.5">
+              <p><strong className="text-white">সম্পাদক ও প্রকাশক:</strong> জয়নাল আবেদীন (Joynal Abedin)</p>
+              <p><strong className="text-white">প্রধান কার্যালয়:</strong> ঢাকা ও ময়মনসিংহ, বাংলাদেশ</p>
+              <p><strong className="text-white">সম্পাদকীয় বিভাগ:</strong> desk@joybarta.com</p>
             </div>
           </div>
 
-          {/* Column 4: Policy & Anti-Corruption Commission Support */}
-          <div className="space-y-3">
-            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-slate-800 pb-1.5 text-red-500 font-serif">
-              নীতিমালা ও আইনি অস্বীকৃতি
+          {/* Column 3: Citizen Helplines & Mobile APK Notice */}
+          <div className="space-y-2.5">
+            <h4 className="text-white text-xs font-black uppercase tracking-wider border-b border-emerald-900 pb-1.5 text-emerald-400 font-serif">
+              মোবাইল অ্যাপ ও নাগরিক সেবা
             </h4>
-            <div className="space-y-2 text-justify">
-              <div className="bg-slate-900/90 border-l-3 border-emerald-500 p-2.5 text-[11px] text-slate-200 leading-relaxed">
-                <p className="font-bold text-emerald-400 text-[11.5px] mb-1">
-                  নীতিমালা (Policy Disclaimer):
-                </p>
-                <p className="text-slate-300 font-medium">
-                  "এটি দুর্নীতি দমন কমিশনের সাপোর্টিভ একটি প্রকাশনা সংস্থা।"
-                </p>
-              </div>
-              <p className="text-[10.5px] leading-relaxed text-slate-400">
-                সকল অনুসন্ধানী প্রতিবেদন অকাট্য দালিলিক প্রমাণের ভিত্তিতে জনস্বার্থে পরিবেশিত। তথ্যদাতার পূর্ণ নিরাপত্তা আন্তর্জাতিক হুইসেলব্লোয়ার সুরক্ষা নীতিমালার অধীন সংরক্ষিত।
+            <div className="text-xs leading-relaxed text-slate-300 space-y-1.5">
+              <button 
+                onClick={() => setShowAndroidModal(true)}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-1.5 rounded-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs my-1"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Android স্ট্যান্ডঅ্যালন অ্যাপ ডাউনলোড</span>
+              </button>
+              <p className="text-[11px] text-slate-400 pt-1">
+                জরুরি পুলিশ ৯৯৯ | দুদক ১০৬ | তথ্য সেবা ৩৩৩
               </p>
-              <div className="text-[10px] text-slate-400 font-mono pt-1">
-                জরুরি হটলাইন: দুদক ১০৬ | পুলিশ ৯৯৯
-              </div>
+              <p className="text-[11px] text-slate-400">
+                জয়বার্তায় প্রকাশিত সংবাদের যাবতীয় স্বত্ব সংরক্ষিত।
+              </p>
             </div>
           </div>
 
         </div>
 
-        {/* Clean GeneratePress-style copyright sub-footer */}
-        <div className="max-w-7xl mx-auto border-t border-slate-800/80 mt-10 pt-4 flex flex-wrap justify-between items-center text-[11px] text-slate-400 font-mono gap-2">
+        {/* Clean Copyright Bar */}
+        <div className="max-w-7xl mx-auto border-t border-emerald-950 mt-8 pt-4 flex flex-wrap justify-between items-center text-[11px] text-slate-400 font-mono gap-2">
           <span>
-            &copy; {new Date().getFullYear()} <strong className="text-slate-200">Vulture Eyes (ভালচার আইস)</strong>. All rights reserved.
+            &copy; {new Date().getFullYear()} <strong className="text-slate-100">জয়বার্তা (Joybarta)</strong>. সর্বস্বত্ব সংরক্ষিত।
           </span>
-          <span className="text-[10.5px]">
-            UK Co Reg: 17041560 | সম্পাদক: Tarek Anwar Khan | প্রকাশক: দেবাশীষ ঘোষ মিশু
+          <span className="text-[10.5px] text-slate-300">
+            সত্যের সন্ধানে প্রতিদিন | প্রকাশক ও সম্পাদক: জয়নাল আবেদীন
           </span>
         </div>
       </footer>
