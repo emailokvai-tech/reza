@@ -462,7 +462,7 @@ export default function App() {
                         {/* Real Photo Only (If no image, this block is completely skipped - NO fake images) */}
                         {item.image && item.image.trim() !== '' && (
                           <div 
-                            className="mb-3 overflow-hidden border border-slate-300 bg-slate-100 rounded-xs flex items-center justify-center cursor-pointer p-1"
+                            className="mb-3 overflow-hidden border border-slate-300 bg-slate-100 rounded-xs flex flex-col items-center justify-center cursor-pointer p-1 relative"
                             onClick={() => {
                               setAutoPlayAudio(false);
                               setSelectedArticle(item);
@@ -476,6 +476,11 @@ export default function App() {
                               maxHeight="max-h-[260px]"
                               className="w-auto max-w-full hover:scale-102 transition-transform duration-300"
                             />
+                            {item.gallery && item.gallery.length > 1 && (
+                              <div className="absolute bottom-2 right-2 bg-slate-950/85 text-white text-[10px] font-bold px-2 py-0.5 rounded-xs flex items-center gap-1 shadow-xs border border-white/20">
+                                <span>📷 {toBengaliNumber(item.gallery.length)}টি ছবি সংযুক্ত</span>
+                              </div>
+                            )}
                           </div>
                         )}
 

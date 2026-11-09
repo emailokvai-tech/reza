@@ -21,6 +21,7 @@ export interface NewsItem {
   category: string;
   categoryLabel: string;
   image?: string;
+  gallery?: { url: string; caption?: string }[];
   likes: number;
   shares: number;
   comments?: NewsComment[];
@@ -56,6 +57,7 @@ function mapToNewsItem(row: typeof news.$inferSelect): NewsItem {
     category: row.category,
     categoryLabel: row.categoryLabel,
     image: row.image || undefined,
+    gallery: inMemoryNewsStore.find(i => i.id === row.id)?.gallery || undefined,
     likes: row.likes,
     shares: row.shares,
     comments: commentsList,
@@ -63,6 +65,70 @@ function mapToNewsItem(row: typeof news.$inferSelect): NewsItem {
     fbPostUrl: "https://www.facebook.com/share/1ahsbSRRMy/?mibextid=wwXIfr",
     isFbPost: true,
   };
+}
+
+// Helper to parse Bengali date string to timestamp for strict reverse-chronological ordering
+export function parseBengaliDateToTime(dateStr: string): number {
+  if (!dateStr) return 0;
+  const bnToEnMap: { [k: string]: string } = {
+    '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4',
+    '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9'
+  };
+  const normalized = dateStr.replace(/[০-৯]/g, d => bnToEnMap[d] || d);
+  const months: { [k: string]: number } = {
+    'জানুয়ারি': 0, 'জানুয়ারি': 0,
+    'ফেব্রুয়ারি': 1, 'ফেব্রুয়ারি': 1,
+    'মার্চ': 2,
+    'এপ্রিল': 3,
+    'মে': 4,
+    'জুন': 5,
+    'জুলাই': 6,
+    'আগস্ট': 7,
+    'সেপ্টেম্বর': 8,
+    'অক্টোবর': 9,
+    'নভেম্বর': 10,
+    'ডিসেম্বর': 11
+  };
+  const match = normalized.match(/(\d+)\s+([^\s,]+)[,\s]+(\d+)/);
+  if (match) {
+    const day = parseInt(match[1], 10);
+    const monthName = match[2].trim();
+    const year = parseInt(match[3], 10);
+    const month = months[monthName] ?? 10;
+    return new Date(year, month, day).getTime();
+  }
+  return 0;
+}
+
+export function sortNewsReverseChronological(items: NewsItem[]): NewsItem[] {
+  return [...items].sort((a, b) => {
+    const timeA = parseBengaliDateToTime(a.date);
+    const timeB = parseBengaliDateToTime(b.date);
+    
+    // Strict date comparison: newer date (e.g. 8 Nov) comes BEFORE older date (7 Nov)
+    if (timeB !== timeA) {
+      return timeB - timeA;
+    }
+    
+    // Priority on 9 Nov:
+    // 1st: Mymensingh Police Rank Badge news
+    if (a.id === 'joybarta-mymo-police-rank-badge-2026') return -1;
+    if (b.id === 'joybarta-mymo-police-rank-badge-2026') return 1;
+
+    // 2nd: Albert Chowdhury fraud & embezzlement news (directly below police news)
+    if (a.id === 'joybarta-mymensingh-elbert-chowdhury-fraud-2026') return -1;
+    if (b.id === 'joybarta-mymensingh-elbert-chowdhury-fraud-2026') return 1;
+
+    // Priority on 8 Nov for Sherpur news
+    if (a.id === 'joybarta-sherpur-police-officers-mess-2026') return -1;
+    if (b.id === 'joybarta-sherpur-police-officers-mess-2026') return 1;
+
+    // Priority on 7 Nov for Lead historical article
+    if (a.id === 'joybarta-lead-7-november-1975') return -1;
+    if (b.id === 'joybarta-lead-7-november-1975') return 1;
+
+    return 0;
+  });
 }
 
 // Fetch all news (with resilient in-memory fallback for Vercel and serverless)
@@ -78,31 +144,13 @@ export async function getAllNews(): Promise<NewsItem[]> {
           if (idx >= 0) inMemoryNewsStore[idx] = item;
           else inMemoryNewsStore.push(item);
         }
-        const sorted = [...dbItems].sort((a, b) => {
-          if (a.id === 'joybarta-lead-7-november-1975') return -1;
-          if (b.id === 'joybarta-lead-7-november-1975') return 1;
-          if (a.id === 'joybarta-sherpur-police-officers-mess-2026') return -1;
-          if (b.id === 'joybarta-sherpur-police-officers-mess-2026') return 1;
-          if (a.id === 'joybarta-gov-7-nov-2026') return -1;
-          if (b.id === 'joybarta-gov-7-nov-2026') return 1;
-          return 0;
-        });
-        return sorted;
+        return sortNewsReverseChronological(dbItems);
       }
     }
   } catch (error) {
     console.warn("Database query skipped or failed, falling back to memory store:", error);
   }
-  const sortedMemory = [...inMemoryNewsStore].sort((a, b) => {
-    if (a.id === 'joybarta-lead-7-november-1975') return -1;
-    if (b.id === 'joybarta-lead-7-november-1975') return 1;
-    if (a.id === 'joybarta-sherpur-police-officers-mess-2026') return -1;
-    if (b.id === 'joybarta-sherpur-police-officers-mess-2026') return 1;
-    if (a.id === 'joybarta-gov-7-nov-2026') return -1;
-    if (b.id === 'joybarta-gov-7-nov-2026') return 1;
-    return 0;
-  });
-  return sortedMemory;
+  return sortNewsReverseChronological(inMemoryNewsStore);
 }
 
 // Add a news article

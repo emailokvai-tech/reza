@@ -12,7 +12,7 @@ interface LeadNewsProps {
 }
 
 export default function LeadNews({ newsList, onLike, onShare, onSelectArticle, onListenArticle }: LeadNewsProps) {
-  const leadArticle = newsList.find(n => n.id === 'joybarta-lead-7-november-1975') || newsList[0];
+  const leadArticle = newsList[0];
   const secondaryArticles = newsList
     .filter(item => item.id !== leadArticle?.id)
     .slice(0, 4);
@@ -44,8 +44,37 @@ export default function LeadNews({ newsList, onLike, onShare, onSelectArticle, o
             </span>
           </div>
 
-          {/* Authentic Lead Photo (only if image exists) - Full Uncropped Resolution */}
-          {leadArticle.image && leadArticle.image.trim() !== '' && (
+          {/* Authentic Lead Photo or Dual-Photo Page Makeup */}
+          {leadArticle.gallery && leadArticle.gallery.length > 1 ? (
+            <div className="space-y-2 my-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {leadArticle.gallery.map((gItem, gIdx) => (
+                  <div 
+                    key={gIdx} 
+                    className="overflow-hidden border border-slate-300 bg-slate-50 p-2 rounded-xs cursor-pointer space-y-1.5 shadow-2xs"
+                    onClick={() => onSelectArticle(leadArticle)}
+                  >
+                    <div className="overflow-hidden bg-slate-900/5 flex items-center justify-center border border-slate-200">
+                      <NewsImage 
+                        src={gItem.url} 
+                        alt={gItem.caption || leadArticle.title} 
+                        aspectRatio="auto"
+                        objectFit="contain"
+                        maxHeight="max-h-[280px]"
+                        className="w-full hover:scale-101 transition-transform duration-300"
+                      />
+                    </div>
+                    {gItem.caption && (
+                      <p className="text-[11px] text-slate-700 font-medium leading-snug line-clamp-2">
+                        <span className="font-bold text-[#0f3d2e] mr-1">ছবি {gIdx + 1}:</span>
+                        {gItem.caption}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : leadArticle.image && leadArticle.image.trim() !== '' ? (
             <div className="space-y-1.5 my-2">
               <div 
                 className="overflow-hidden border border-slate-300 bg-slate-900/5 rounded-xs flex items-center justify-center cursor-pointer p-1"
@@ -61,10 +90,16 @@ export default function LeadNews({ newsList, onLike, onShare, onSelectArticle, o
                 />
               </div>
               <p className="text-[11.5px] text-slate-600 font-medium italic text-center">
-                ঐতিহাসিক আলোকচিত্র: সাবেক রাষ্ট্রপতি শহীদ জিয়াউর রহমান (বীর উত্তম)
+                {leadArticle.id === 'joybarta-lead-7-november-1975'
+                  ? 'ঐতিহাসিক আলোকচিত্র: সাবেক রাষ্ট্রপতি শহীদ জিয়াউর রহমান (বীর উত্তম)'
+                  : leadArticle.id === 'joybarta-sherpur-police-officers-mess-2026'
+                  ? 'ছবি: শেরপুরে প্রস্তাবিত অফিসার্স মেসের স্থান পরিদর্শনে ময়মনসিংহ রেঞ্জ ডিআইজি ও পুলিশ কর্মকর্তাবৃন্দ।'
+                  : leadArticle.id === 'joybarta-mymensingh-elbert-chowdhury-fraud-2026'
+                  ? 'ছবি: ময়মনসিংহে গ্রাহকদের ৪ কোটি টাকা আত্মসাতের অভিযোগে আটক এলবার্ট চৌধুরী।'
+                  : 'ছবি: জয়বার্তা'}
               </p>
             </div>
-          )}
+          ) : null}
 
           {/* Lead Headline */}
           <h1 
@@ -99,7 +134,7 @@ export default function LeadNews({ newsList, onLike, onShare, onSelectArticle, o
               <button
                 onClick={() => onListenArticle ? onListenArticle(leadArticle) : onSelectArticle(leadArticle)}
                 className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3.5 py-2 rounded-xs inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
-                title="সংবাদটি শুনুন (প্রমিত বাংলা নারী কণ্ঠ)"
+                title="সংবাদটি শুনুন (প্রমিত বাংলা পুরুষ কণ্ঠ — জয়বার্তা বাচনিক পাঠ)"
               >
                 <Volume2 className="w-4 h-4" />
                 <span>সংবাদ শুনুন</span>

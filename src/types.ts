@@ -17,6 +17,7 @@ export interface NewsItem {
   category: Category;
   categoryLabel: string;
   image?: string;
+  gallery?: { url: string; caption?: string }[];
   videoUrl?: string;
   likes: number;
   shares: number;

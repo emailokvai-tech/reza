@@ -117,7 +117,7 @@ app.post("/api/facebook/sync", async (req, res) => {
   }
 });
 
-// Text-to-Speech Endpoint: Elegant Bengali Female Newsreader Voice
+// Text-to-Speech Endpoint: Authoritative Bengali Male Newsreader Voice (Joynal Abedin Persona)
 app.get("/api/tts", async (req, res) => {
   try {
     const articleId = req.query.id as string;

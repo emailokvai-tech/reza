@@ -45,7 +45,7 @@ export default function ArticleReaderModal({
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
   const [isCopied, setIsCopied] = useState(false);
 
-  // Studio News Audio Player States (Authentic Bengali Female Voice)
+  // Studio News Audio Player States (Authentic Bengali Male Voice - Joynal Abedin Persona)
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
@@ -102,6 +102,9 @@ export default function ArticleReaderModal({
         audioRef.current.pause();
         audioRef.current.src = '';
       }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, []);
 
@@ -111,6 +114,9 @@ export default function ArticleReaderModal({
       if (e.key === 'Escape') {
         if (audioRef.current) {
           audioRef.current.pause();
+        }
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
         }
         onClose();
       }
@@ -129,11 +135,76 @@ export default function ArticleReaderModal({
     fontSize === 'large' ? 'text-base md:text-lg leading-relaxed' :
     'text-sm md:text-base leading-relaxed';
 
+  // Enhanced Client-Side SpeechSynthesis configuration for fluent Bengali news reading
+  const playViaClientSpeechSynthesis = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      setAudioError('আপনার ব্রাউজারে স্পিচ সিন্থেসিস সমর্থিত নয়।');
+      setIsLoadingAudio(false);
+      setIsPlaying(false);
+      return;
+    }
+
+    try {
+      window.speechSynthesis.cancel();
+      const speechText = `${article.title}। ${article.excerpt ? article.excerpt + '।' : ''} ${article.body}`;
+      const utterance = new SpeechSynthesisUtterance(speechText);
+      utterance.lang = 'bn-BD';
+      utterance.rate = playbackSpeed * 0.95;
+      utterance.pitch = 0.82; // Mature masculine newsreader baritone
+
+      const voices = window.speechSynthesis.getVoices();
+      const bnVoice = 
+        voices.find(v => v.lang.toLowerCase().startsWith('bn') && (v.name.includes('Male') || v.name.includes('Bashkar') || v.name.includes('Pradeep') || (!v.name.includes('Female') && !v.name.includes('Tanisha')))) ||
+        voices.find(v => v.lang.toLowerCase().startsWith('bn'));
+
+      if (bnVoice) {
+        utterance.voice = bnVoice;
+      }
+
+      utterance.onstart = () => {
+        setIsPlaying(true);
+        setIsLoadingAudio(false);
+        setAudioError(null);
+      };
+
+      utterance.onend = () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      };
+
+      utterance.onerror = (e) => {
+        console.warn('SpeechSynthesis error:', e);
+        setIsPlaying(false);
+        setIsLoadingAudio(false);
+        setAudioError('সংবাদ পাঠের অডিও লোড হতে পারেনি।');
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } catch (err: any) {
+      console.error('SpeechSynthesis exception:', err);
+      setIsPlaying(false);
+      setIsLoadingAudio(false);
+      setAudioError('অডিও প্লে করতে সমস্যা হয়েছে।');
+    }
+  };
+
   // Toggle authentic Bengali female newsreader audio
   const togglePlayAudio = async () => {
     setAudioError(null);
 
-    // If audio already exists
+    // If client synthesis is speaking
+    if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.speaking) {
+      if (isPlaying) {
+        window.speechSynthesis.pause();
+        setIsPlaying(false);
+      } else {
+        window.speechSynthesis.resume();
+        setIsPlaying(true);
+      }
+      return;
+    }
+
+    // If audio element already exists
     if (audioRef.current && audioRef.current.src) {
       if (isPlaying) {
         audioRef.current.pause();
@@ -144,8 +215,7 @@ export default function ArticleReaderModal({
           await audioRef.current.play();
           setIsPlaying(true);
         } catch (e: any) {
-          setAudioError('অডিও প্লে করতে সমস্যা হয়েছে।');
-          setIsPlaying(false);
+          playViaClientSpeechSynthesis();
         }
       }
       return;
@@ -176,20 +246,16 @@ export default function ArticleReaderModal({
       });
 
       audio.addEventListener('error', (e) => {
-        console.error('Audio playback error:', e);
-        setIsLoadingAudio(false);
-        setIsPlaying(false);
-        setAudioError('সংবাদ পাঠের অডিও লোড হতে পারেনি। অনুগ্রহ করে আবার চেষ্টা করুন।');
+        console.warn('Server TTS stream error, switching to enhanced client speech synthesis:', e);
+        playViaClientSpeechSynthesis();
       });
 
       audioRef.current = audio;
       await audio.play();
       setIsPlaying(true);
     } catch (err: any) {
-      console.error('TTS request error:', err);
-      setIsLoadingAudio(false);
-      setIsPlaying(false);
-      setAudioError('অডিও পাঠিকা সংযোগে ত্রুটি দেখা দিয়েছে।');
+      console.warn('Server TTS request failed, activating client speech synthesis fallback:', err);
+      playViaClientSpeechSynthesis();
     }
   };
 
@@ -388,7 +454,7 @@ export default function ArticleReaderModal({
             </div>
           </div>
 
-          {/* Dedicated Studio Newsreader Audio Player Bar (মার্জিত প্রমিত বাংলা নারী কণ্ঠ) */}
+          {/* Dedicated Studio Newsreader Audio Player Bar (প্রমিত বাংলা পুরুষ কণ্ঠ — সাংবাদিক জয়নাল আবেদীন বাচনিক রীতি) */}
           <div className="bg-gradient-to-r from-[#0b291e] to-[#0f3d2e] text-white p-3.5 sm:p-4 rounded-xs border-l-4 border-red-600 shadow-sm space-y-3">
             <div className="flex flex-wrap justify-between items-center gap-2">
               <div className="flex items-center gap-2">
@@ -398,12 +464,12 @@ export default function ArticleReaderModal({
                 <div>
                   <h4 className="font-serif font-bold text-xs sm:text-sm text-white flex items-center gap-1.5">
                     <span>জয়বার্তা সংবাদ বুলেটিন</span>
-                    <span className="text-[10px] bg-emerald-800 text-emerald-200 px-1.5 py-0.2 rounded-xs font-sans font-medium">
-                      প্রমিত বাংলা নারী কণ্ঠ
+                    <span className="text-[10px] bg-red-700 text-white px-2 py-0.5 rounded-xs font-sans font-bold shadow-xs">
+                      🎙️ প্রমিত পুরুষ কণ্ঠ (জয়নাল আবেদীন ভয়েস)
                     </span>
                   </h4>
                   <p className="text-[10.5px] text-emerald-200">
-                    মার্জিত ও স্পষ্ট সংবাদ বাচনিক পাঠ শুনুন
+                    চলিত ভাষায় প্রমিত উচ্চারণে গম্ভীর ও স্পষ্ট সংবাদ বাচনিক পাঠ
                   </p>
                 </div>
               </div>
@@ -488,8 +554,39 @@ export default function ArticleReaderModal({
             )}
           </div>
 
-          {/* Authentic Photograph (Only if image is present and not empty) */}
-          {article.image && article.image.trim() !== '' && (
+          {/* Authentic Photograph / Dual-Photo Gallery in Page Makeup Sense */}
+          {article.gallery && article.gallery.length > 1 ? (
+            <div className="space-y-3 my-4">
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-1.5">
+                <span className="w-2.5 h-2.5 bg-red-600 inline-block"></span>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#0f3d2e] font-serif">
+                  ফটোগ্যালারি ও অনুষ্ঠান মুহূর্ত ({article.gallery.length}টি আলোকচিত্র)
+                </h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {article.gallery.map((gItem, gIdx) => (
+                  <div key={gIdx} className="space-y-1.5 bg-slate-50 border border-slate-300 p-2.5 rounded-xs shadow-xs">
+                    <div className="overflow-hidden bg-slate-900/5 rounded-xs flex items-center justify-center border border-slate-200">
+                      <NewsImage 
+                        src={gItem.url} 
+                        alt={gItem.caption || article.title} 
+                        aspectRatio="auto"
+                        objectFit="contain"
+                        maxHeight="max-h-[380px]"
+                        className="w-full"
+                      />
+                    </div>
+                    {gItem.caption && (
+                      <p className="text-[11.5px] text-slate-700 font-medium leading-relaxed pt-1 font-sans text-justify">
+                        <span className="font-bold text-[#0f3d2e] mr-1">ছবি {gIdx + 1}:</span>
+                        {gItem.caption}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : article.image && article.image.trim() !== '' ? (
             <div className="space-y-1.5 my-3">
               <div className="overflow-hidden border border-slate-300 bg-slate-900/5 rounded-xs flex items-center justify-center p-1.5">
                 <NewsImage 
@@ -504,10 +601,14 @@ export default function ArticleReaderModal({
               <p className="text-xs text-slate-600 font-medium italic text-center">
                 {article.id === 'joybarta-lead-7-november-1975'
                   ? 'ঐতিহাসিক আলোকচিত্র: সাবেক রাষ্ট্রপতি শহীদ জিয়াউর রহমান (বীর উত্তম)'
+                  : article.id === 'joybarta-sherpur-police-officers-mess-2026'
+                  ? 'ছবি: শেরপুরে প্রস্তাবিত অফিসার্স মেসের স্থান পরিদর্শনে ময়মনসিংহ রেঞ্জ ডিআইজি ও পুলিশ কর্মকর্তাবৃন্দ।'
+                  : article.id === 'joybarta-mymensingh-elbert-chowdhury-fraud-2026'
+                  ? 'ছবি: ময়মনসিংহে গ্রাহকদের ৪ কোটি টাকা আত্মসাতের অভিযোগে আটক এলবার্ট চৌধুরী।'
                   : 'ছবি: জয়বার্তা'}
               </p>
             </div>
-          )}
+          ) : null}
 
           {/* Video Player (if videoUrl is present) */}
           {article.videoUrl && article.videoUrl.trim() !== '' && (
